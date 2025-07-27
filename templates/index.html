@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="it" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🦔 Dashboard - Centro La Ninna</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="/static/css/mobile.css" rel="stylesheet">
+    <link href="/static/css/desktop.css" rel="stylesheet">
+    <link href="/static/css/mobile-fixes.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'hedgehog-brown': '#8B4513',
+                        'hedgehog-tan': '#D2691E',
+                        'hedgehog-light': '#F4A460',
+                        'cozy-beige': '#F5F5DC'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="h-full bg-gradient-to-br from-cozy-beige via-green-50 to-blue-50">
+
+
+<!-- Mobile Header -->
+<div class="mobile-header">
+    <button id="mobile-menu-btn" class="touch-target focus-ring">
+        <i class="fas fa-bars text-hedgehog-brown"></i>
+    </button>
+    <div class="flex items-center space-x-2">
+        <div class="text-2xl">🦔</div>
+        <h1 class="text-lg font-bold text-hedgehog-brown">La Ninna</h1>
+    </div>
+    <div class="w-10"></div>
+</div>
+
+<div class="min-h-screen bg-gradient-to-br from-cozy-beige via-green-50 to-blue-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Hero Section -->
+    <div class="text-center mb-12">
+        <div class="text-8xl mb-6">🦔</div>
+        <h1 class="text-5xl font-bold text-hedgehog-brown mb-4">
+            Benvenuto a La Ninna
+        </h1>
+        <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+            Il sistema di gestione più carino per il tuo centro di recupero ricci!
+            Monitora la salute, gestisci le terapie e tieni tutto sotto controllo.
+        </p>
+    </div>
+
+    <!-- Quick Stats Cards -->
+    <div class="grid-responsive mb-8 sm:mb-12">
+        <div class="card card-hover border-l-4 border-green-500 animate-fade-in">
+            <div class="flex flex-col items-center justify-center text-center">
+                <div class="text-4xl mb-2">🦔</div>
+                <p class="text-sm font-medium text-gray-600 mb-1">Ricci Totali</p>
+                <p class="text-3xl font-bold text-green-600" id="total-hedgehogs">0</p>
+            </div>
+        </div>
+
+        <div class="card card-hover border-l-4 border-blue-500 animate-fade-in">
+            <div class="flex flex-col items-center justify-center text-center">
+                <div class="text-4xl mb-2">🏠</div>
+                <p class="text-sm font-medium text-gray-600 mb-1">Stanze</p>
+                <p class="text-3xl font-bold text-blue-600" id="total-rooms">0</p>
+            </div>
+        </div>
+
+        <div class="card card-hover border-l-4 border-yellow-500 animate-fade-in">
+            <div class="flex flex-col items-center justify-center text-center">
+                <div class="text-4xl mb-2">💊</div>
+                <p class="text-sm font-medium text-gray-600 mb-1">In Cura</p>
+                <p class="text-3xl font-bold text-yellow-600" id="in-care">0</p>
+            </div>
+        </div>
+
+        <div class="card card-hover border-l-4 border-red-500 animate-fade-in">
+            <div class="flex flex-col items-center justify-center text-center">
+                <div class="text-4xl mb-2">🔔</div>
+                <p class="text-sm font-medium text-gray-600 mb-1">Notifiche</p>
+                <p class="text-3xl font-bold text-red-600" id="notifications">3</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <button onclick="window.location.href='/hedgehogs'"
+                class="card card-hover p-8 border-2 border-transparent hover-hedgehog group text-center">
+            <div class="text-6xl mb-4 emoji-hover transition-transform duration-300">🦔</div>
+            <h3 class="text-xl font-bold text-hedgehog-brown mb-2">Gestisci Ricci</h3>
+            <p class="text-gray-600">Visualizza e gestisci tutti i ricci del centro</p>
+        </button>
+
+        <button onclick="window.location.href='/rooms'"
+                class="card card-hover p-8 border-2 border-transparent hover-blue group text-center">
+            <div class="text-6xl mb-4 emoji-hover transition-transform duration-300">🏠</div>
+            <h3 class="text-xl font-bold text-blue-600 mb-2">Gestisci Stanze</h3>
+            <p class="text-gray-600">Organizza spazi e aree del centro</p>
+        </button>
+
+        <button onclick="window.location.href='/notifications'"
+                class="card card-hover p-8 border-2 border-transparent hover-red group text-center">
+            <div class="text-6xl mb-4 emoji-hover transition-transform duration-300">🔔</div>
+            <h3 class="text-xl font-bold text-red-600 mb-2">Notifiche</h3>
+            <p class="text-gray-600">Controlla avvisi e promemoria</p>
+        </button>
+    </div>
+
+    <!-- Quick Actions Bottom -->
+    <div class="mt-16 pt-8 border-t border-gray-200">
+        <h2 class="text-2xl font-bold text-hedgehog-brown mb-6 text-center">Azioni Rapide</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <button onclick="openQuickHedgehogForm()"
+                    class="btn-primary text-white p-4 rounded-xl transition-all duration-300 flex items-center justify-center space-x-3">
+                <i class="fas fa-plus-circle text-xl"></i>
+                <span class="font-medium">Nuovo Riccio</span>
+            </button>
+            <button onclick="openQuickWeightForm()"
+                    class="text-white p-4 rounded-xl transition-all duration-300 flex items-center justify-center space-x-3 quick-btn-green">
+                <i class="fas fa-weight text-xl"></i>
+                <span class="font-medium">Aggiungi Pesata</span>
+            </button>
+            <button onclick="openQuickTherapyForm()"
+                    class="text-white p-4 rounded-xl transition-all duration-300 flex items-center justify-center space-x-3 quick-btn-purple">
+                <i class="fas fa-pills text-xl"></i>
+                <span class="font-medium">Aggiungi Terapia</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div id="main-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center p-6 border-b border-gray-200">
+            <h2 class="text-2xl font-bold text-hedgehog-brown" id="modal-title">Modal</h2>
+            <button onclick="document.getElementById('main-modal').classList.add('hidden')"
+                    class="text-gray-400 hover:text-gray-600 text-2xl">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div id="modal-content" class="p-6"></div>
+    </div>
+    </div>
+</div>
+
+<script src="/static/js/mobile.js"></script>
+<script>
+// Check authentication
+if (!localStorage.getItem('token')) {
+    window.location.href = '/login';
+}
+
+// Load dashboard stats
+async function loadDashboardStats() {
+    try {
+        const [hedgehogs, rooms] = await Promise.all([
+            fetch('/api/hedgehogs', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }),
+            fetch('/api/rooms', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } })
+        ]);
+
+        if (hedgehogs.ok && rooms.ok) {
+            const hedgehogsData = await hedgehogs.json();
+            const roomsData = await rooms.json();
+
+            document.getElementById('total-hedgehogs').textContent = hedgehogsData.length;
+            document.getElementById('in-care').textContent = hedgehogsData.filter(h => h.status === 'in_care').length;
+            document.getElementById('total-rooms').textContent = roomsData.length;
+        }
+    } catch (error) {
+        console.error('Errore caricamento statistiche:', error);
+    }
+}
+
+// Load stats on page load
+document.addEventListener('DOMContentLoaded', loadDashboardStats);
+
+// Auto-refresh every 30 seconds
+setInterval(loadDashboardStats, 30000);
+
+function openQuickHedgehogForm() {
+    const formHTML = `
+        <div class="space-y-6">
+            <h2 class="text-2xl font-bold text-hedgehog-brown">🦔 Nuovo Riccio</h2>
+            
+            <form id="quickHedgehogForm" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-gray-700 font-bold mb-2">Nome *</label>
+                        <input type="text" id="name" name="name" required
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-bold mb-2">Stato</label>
+                        <select id="status" name="status"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown">
+                            <option value="in_care">In cura</option>
+                            <option value="recovered">Recuperato</option>
+                            <option value="deceased">Deceduto</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-gray-700 font-bold mb-2">Descrizione</label>
+                    <textarea id="description" name="description" rows="3"
+                              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown"
+                              placeholder="Condizioni di salute, caratteristiche particolari..."></textarea>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-gray-700 font-bold mb-2">Data di Arrivo</label>
+                        <input type="date" id="arrival_date" name="arrival_date"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-bold mb-2">Area di Alloggio</label>
+                        <select id="area_id" name="area_id"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown">
+                            <option value="">Nessuna area assegnata</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-4 pt-4 border-t">
+                    <button type="button" onclick="document.getElementById('main-modal').classList.add('hidden')"
+                            class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                        Annulla
+                    </button>
+                    <button type="submit"
+                            class="bg-hedgehog-brown text-white px-6 py-2 rounded-lg hover:bg-hedgehog-tan">
+                        <i class="fas fa-save mr-2"></i>Salva
+                    </button>
+                </div>
+            </form>
+        </div>
+    `;
+    
+    document.getElementById('modal-content').innerHTML = formHTML;
+    document.getElementById('main-modal').classList.remove('hidden');
+    
+    // Set default date
+    document.getElementById('arrival_date').value = new Date().toISOString().split('T')[0];
+    
+    // Load areas
+    loadAreasForHedgehogForm();
+    
+    // Handle form submission
+    document.getElementById('quickHedgehogForm').addEventListener('submit', handleQuickHedgehogSubmit);
+}
+
+function openQuickWeightForm() {
+    const formHTML = `
+        <div class="space-y-6">
+            <h2 class="text-2xl font-bold text-hedgehog-brown">⚖️ Aggiungi Pesata</h2>
+            
+            <form id="quickWeightForm" class="space-y-4">
+                <div>
+                    <label class="block text-gray-700 font-bold mb-2">Seleziona Riccio *</label>
+                    <select id="hedgehog_select" name="hedgehog_id" required
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown">
+                        <option value="">Seleziona un riccio...</option>
+                    </select>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-gray-700 font-bold mb-2">Peso (grammi) *</label>
+                        <input type="number" id="weight" name="weight" required min="1" step="0.1"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown"
+                               placeholder="es. 450">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-bold mb-2">Data Pesata</label>
+                        <input type="date" id="weight_date" name="weight_date"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-gray-700 font-bold mb-2">Note</label>
+                    <textarea id="notes" name="notes" rows="3"
+                              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown"
+                              placeholder="Note sulla pesata..."></textarea>
+                </div>
+
+                <div class="flex justify-end space-x-4 pt-4 border-t">
+                    <button type="button" onclick="document.getElementById('main-modal').classList.add('hidden')"
+                            class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                        Annulla
+                    </button>
+                    <button type="submit"
+                            class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700">
+                        <i class="fas fa-save mr-2"></i>Salva
+                    </button>
+                </div>
+            </form>
+        </div>
+    `;
+    
+    document.getElementById('modal-content').innerHTML = formHTML;
+    document.getElementById('main-modal').classList.remove('hidden');
+    
+    // Set default date
+    document.getElementById('weight_date').value = new Date().toISOString().split('T')[0];
+    
+    // Load hedgehogs
+    loadHedgehogsForSelect('hedgehog_select');
+    
+    // Handle form submission
+    document.getElementById('quickWeightForm').addEventListener('submit', handleQuickWeightSubmit);
+}
+
+function openQuickTherapyForm() {
+    const formHTML = `
+        <div class="space-y-6">
+            <h2 class="text-2xl font-bold text-hedgehog-brown">💊 Aggiungi Terapia</h2>
+            
+            <form id="quickTherapyForm" class="space-y-4">
+                <div>
+                    <label class="block text-gray-700 font-bold mb-2">Seleziona Riccio *</label>
+                    <select id="hedgehog_select_therapy" name="hedgehog_id" required
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown">
+                        <option value="">Seleziona un riccio...</option>
+                    </select>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-gray-700 font-bold mb-2">Nome Terapia *</label>
+                        <input type="text" id="therapy_name" name="therapy_name" required
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown"
+                               placeholder="es. Antibiotico">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-bold mb-2">Dosaggio</label>
+                        <input type="text" id="dosage" name="dosage"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown"
+                               placeholder="es. 0.5ml">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-gray-700 font-bold mb-2">Data Inizio</label>
+                        <input type="date" id="start_date" name="start_date"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-bold mb-2">Frequenza</label>
+                        <select id="frequency" name="frequency"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown">
+                            <option value="daily">Giornaliera</option>
+                            <option value="twice_daily">Due volte al giorno</option>
+                            <option value="weekly">Settimanale</option>
+                            <option value="as_needed">Al bisogno</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-4 pt-4 border-t">
+                    <button type="button" onclick="document.getElementById('main-modal').classList.add('hidden')"
+                            class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                        Annulla
+                    </button>
+                    <button type="submit"
+                            class="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700">
+                        <i class="fas fa-save mr-2"></i>Salva
+                    </button>
+                </div>
+            </form>
+        </div>
+    `;
+    
+    document.getElementById('modal-content').innerHTML = formHTML;
+    document.getElementById('main-modal').classList.remove('hidden');
+    
+    // Set default date
+    document.getElementById('start_date').value = new Date().toISOString().split('T')[0];
+    
+    // Load hedgehogs
+    loadHedgehogsForSelect('hedgehog_select_therapy');
+    
+    // Handle form submission
+    document.getElementById('quickTherapyForm').addEventListener('submit', handleQuickTherapySubmit);
+}
+
+async function loadHedgehogsForSelect(selectId) {
+    try {
+        const response = await fetch('/api/hedgehogs', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        const hedgehogs = await response.json();
+        
+        const select = document.getElementById(selectId);
+        hedgehogs.forEach(hedgehog => {
+            const option = document.createElement('option');
+            option.value = hedgehog.id;
+            option.textContent = hedgehog.name;
+            select.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Errore caricamento ricci:', error);
+    }
+}
+
+async function handleQuickWeightSubmit(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    const data = {
+        hedgehog_id: parseInt(formData.get('hedgehog_id')),
+        weight: parseFloat(formData.get('weight')),
+        date: formData.get('weight_date') + 'T00:00:00Z',
+        notes: formData.get('notes')
+    };
+
+    try {
+        const response = await fetch('/api/weight-records', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+
+        if (response.ok) {
+            document.getElementById('main-modal').classList.add('hidden');
+            showToast('Pesata registrata con successo', 'success');
+        } else {
+            const error = await response.json();
+            showToast('Errore: ' + (error.error || 'Errore sconosciuto'), 'error');
+        }
+    } catch (error) {
+        showToast('Errore di connessione', 'error');
+    }
+}
+
+async function handleQuickTherapySubmit(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    const data = {
+        hedgehog_id: parseInt(formData.get('hedgehog_id')),
+        name: formData.get('therapy_name'),
+        dosage: formData.get('dosage'),
+        start_date: formData.get('start_date') + 'T00:00:00Z',
+        frequency: formData.get('frequency')
+    };
+
+    try {
+        const response = await fetch('/api/therapies', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+
+        if (response.ok) {
+            document.getElementById('main-modal').classList.add('hidden');
+            showToast('Terapia aggiunta con successo', 'success');
+        } else {
+            const error = await response.json();
+            showToast('Errore: ' + (error.error || 'Errore sconosciuto'), 'error');
+        }
+    } catch (error) {
+        showToast('Errore di connessione', 'error');
+    }
+}
+
+async function loadAreasForHedgehogForm() {
+    try {
+        const response = await fetch('/api/areas', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        const areas = await response.json();
+        
+        const select = document.getElementById('area_id');
+        areas.forEach(area => {
+            const option = document.createElement('option');
+            option.value = area.id;
+            option.textContent = `${area.room?.name || 'Stanza'} - ${area.name}`;
+            select.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Errore caricamento aree:', error);
+    }
+}
+
+async function handleQuickHedgehogSubmit(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    const data = {
+        name: formData.get('name'),
+        status: formData.get('status'),
+        description: formData.get('description'),
+        arrival_date: formData.get('arrival_date') + 'T00:00:00Z',
+        area_id: formData.get('area_id') ? parseInt(formData.get('area_id')) : null
+    };
+
+    try {
+        const response = await fetch('/api/hedgehogs', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+
+        if (response.ok) {
+            document.getElementById('main-modal').classList.add('hidden');
+            showToast('Riccio aggiunto con successo', 'success');
+            loadDashboardStats(); // Refresh stats
+        } else {
+            const error = await response.json();
+            showToast('Errore: ' + (error.error || 'Errore sconosciuto'), 'error');
+        }
+    } catch (error) {
+        showToast('Errore di connessione', 'error');
+    }
+}
+
+
+
+function logout() {
+    localStorage.removeItem('token');
+    window.location.href = '/login';
+}
+</script>
+</body>
+</html>

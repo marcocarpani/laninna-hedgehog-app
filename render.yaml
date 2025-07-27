@@ -1,0 +1,57 @@
+# 🦔 La Ninna - Render Configuration
+
+services:
+  - type: web
+    name: laninna-hedgehog-app
+    env: go
+    region: frankfurt
+    plan: starter
+    buildCommand: |
+      go install github.com/swaggo/swag/cmd/swag@latest
+      ~/go/bin/swag init
+      go build -o laninna-app .
+    startCommand: ./laninna-app
+    healthCheckPath: /health
+    
+    envVars:
+      - key: PORT
+        value: 8080
+      - key: GIN_MODE
+        value: release
+      - key: DB_PATH
+        value: /opt/render/project/src/laninna.db
+      - key: AUTO_MIGRATE
+        value: true
+      - key: JWT_SECRET
+        sync: false
+      - key: NOTIFICATION_INTERVAL_MINUTES
+        value: 30
+      - key: EXPORT_MAX_RECORDS
+        value: 1000
+      - key: REQUEST_TIMEOUT_SECONDS
+        value: 30
+      - key: RATE_LIMIT_REQUESTS_PER_MINUTE
+        value: 100
+      - key: FONTS_PATH
+        value: ./fonts
+
+    disk:
+      name: laninna-data
+      mountPath: /opt/render/project/src
+      sizeGB: 1
+
+  - type: cron
+    name: laninna-notifications
+    env: go
+    schedule: "*/30 * * * *"
+    buildCommand: |
+      go install github.com/swaggo/swag/cmd/swag@latest
+      ~/go/bin/swag init
+      go build -o laninna-app .
+    startCommand: ./laninna-app -task=notifications
+    
+    envVars:
+      - key: DB_PATH
+        value: /opt/render/project/src/laninna.db
+      - key: JWT_SECRET
+        sync: false

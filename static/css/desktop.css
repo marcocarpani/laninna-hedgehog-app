@@ -1,0 +1,147 @@
+/* 🦔 La Ninna - Desktop Styles */
+
+
+
+/* Desktop Hover Effects */
+@media (min-width: 1024px) {
+    .card-hover:hover {
+        @apply shadow-lg;
+        transform: scale(1.02) translateY(-2px);
+        border-radius: 0.75rem !important;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+}
+
+@media (min-width: 1024px) {
+    .btn-primary:hover {
+        @apply bg-hedgehog-tan;
+        transform: translateY(-2px);
+        box-shadow: 0 10px 15px -3px rgba(139, 69, 19, 0.3);
+    }
+}
+
+/* Quick Action Button Hover */
+@media (min-width: 1024px) {
+    .quick-btn-green:hover {
+        background-color: #047857 !important;
+        transform: translateY(-2px);
+        box-shadow: 0 10px 15px -3px rgba(5, 150, 105, 0.3);
+    }
+
+    .quick-btn-purple:hover {
+        background-color: #6D28D9 !important;
+        transform: translateY(-2px);
+        box-shadow: 0 10px 15px -3px rgba(124, 58, 237, 0.3);
+    }
+}
+
+.desktop-device .nav-item:hover {
+    @apply bg-gray-100;
+}
+
+.desktop-device .nav-item.active:hover {
+    @apply bg-hedgehog-tan;
+}
+
+/* Desktop Group Hover Effects */
+.desktop-device .group:hover .emoji-hover {
+    transform: scale(1.1);
+}
+
+@media (min-width: 1024px) {
+    .hover-hedgehog:hover {
+        border-color: #F4A460;
+        box-shadow: 0 20px 25px -5px rgba(139, 69, 19, 0.2), 0 10px 10px -5px rgba(139, 69, 19, 0.1);
+        border-radius: 0.75rem !important;
+        transform: translateY(-4px) scale(1.02);
+    }
+
+    .hover-blue:hover {
+        border-color: #60A5FA;
+        box-shadow: 0 20px 25px -5px rgba(59, 130, 246, 0.2), 0 10px 10px -5px rgba(59, 130, 246, 0.1);
+        border-radius: 0.75rem !important;
+        transform: translateY(-4px) scale(1.02);
+    }
+
+    .hover-red:hover {
+        border-color: #F87171;
+        box-shadow: 0 20px 25px -5px rgba(239, 68, 68, 0.2), 0 10px 10px -5px rgba(239, 68, 68, 0.1);
+        border-radius: 0.75rem !important;
+        transform: translateY(-4px) scale(1.02);
+    }
+
+    .group:hover .emoji-hover {
+        transform: scale(1.2) rotate(10deg);
+        animation: bounce 0.6s ease-in-out;
+    }
+}
+
+@keyframes bounce {
+    0%, 20%, 60%, 100% {
+        transform: scale(1.2) rotate(10deg) translateY(0);
+    }
+    40% {
+        transform: scale(1.2) rotate(10deg) translateY(-10px);
+    }
+    80% {
+        transform: scale(1.2) rotate(10deg) translateY(-5px);
+    }
+}
+
+/* Desktop Quick Action Button Hover */
+.desktop-device .quick-btn-green:hover {
+    background-color: #047857 !important;
+    transform: translateY(-2px);
+    @apply rounded-xl;
+}
+
+.desktop-device .quick-btn-purple:hover {
+    background-color: #6D28D9 !important;
+    transform: translateY(-2px);
+    @apply rounded-xl;
+}
+
+/* Base Sidebar Icons - Overridden in mobile.css for mobile view */
+.sidebar-icon-mobile {
+    @apply flex items-center rounded-lg text-gray-600 hover:bg-gray-100 hover:text-hedgehog-brown transition-colors duration-200 mx-auto relative;
+}
+
+.sidebar-icon-mobile.active {
+    @apply bg-hedgehog-brown text-white;
+}
+
+.sidebar-icon-mobile.active:hover {
+    @apply bg-hedgehog-tan;
+}
+
+/* Mobile tooltips are defined in mobile.css */
+
+/* Desktop Vertical Navigation Items */
+@media (min-width: 1024px) {
+    .nav-item-vertical {
+        @apply flex flex-col items-center justify-center p-3 rounded-lg text-gray-600 hover:bg-gray-100 hover:text-hedgehog-brown transition-colors duration-200 text-center mx-auto w-full;
+    }
+
+    .nav-item-vertical.active {
+        @apply bg-hedgehog-brown text-white;
+    }
+
+    .nav-item-vertical.active:hover {
+        @apply bg-hedgehog-tan;
+    }
+
+    .nav-item-vertical::after,
+    .sidebar-icon-mobile.lg\:nav-item-vertical::after {
+        content: attr(title);
+        @apply text-xs mt-1 text-center;
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+    
+    /* Hide tooltips on hover for desktop since we're showing labels directly */
+    .nav-item-vertical:hover::before,
+    .sidebar-icon-mobile.lg\:nav-item-vertical:hover::before {
+        display: none;
+    }
+}

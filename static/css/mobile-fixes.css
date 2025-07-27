@@ -1,0 +1,359 @@
+/* 🦔 La Ninna - Mobile UI Fixes for Small Screens */
+
+/* Base responsive text adjustments */
+@media (max-width: 640px) {
+  /* Reduce hero section text size */
+  .text-5xl {
+    font-size: 2.5rem !important; /* Smaller heading for mobile */
+  }
+  
+  .text-3xl {
+    font-size: 1.5rem !important; /* Smaller sub-heading for mobile */
+  }
+  
+  .text-xl {
+    font-size: 1.125rem !important; /* Smaller text for mobile */
+  }
+  
+  /* Reduce emoji sizes on small screens */
+  .text-8xl {
+    font-size: 5rem !important; /* Smaller emoji for mobile */
+  }
+  
+  .text-6xl {
+    font-size: 3.5rem !important; /* Smaller emoji for mobile */
+  }
+  
+  .text-4xl {
+    font-size: 2rem !important; /* Smaller emoji for mobile */
+  }
+  
+  /* Increase spacing for better touch targets */
+  .py-2 {
+    padding-top: 0.625rem !important;
+    padding-bottom: 0.625rem !important;
+  }
+  
+  .px-4 {
+    padding-left: 1.25rem !important;
+    padding-right: 1.25rem !important;
+  }
+  
+  /* Adjust card padding for small screens */
+  .card {
+    padding: 1rem !important;
+  }
+  
+  /* Improve spacing in grid layouts */
+  .gap-6 {
+    gap: 1rem !important;
+  }
+  
+  .gap-4 {
+    gap: 0.75rem !important;
+  }
+  
+  /* Adjust button sizes for better touch targets */
+  button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Ensure form inputs have sufficient height for touch */
+  input, select, textarea {
+    min-height: 44px;
+  }
+}
+
+/* Specific component fixes */
+@media (max-width: 640px) {
+  /* Quick Stats Cards - reduce padding and adjust layout */
+  .grid-responsive {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.75rem !important;
+  }
+  
+  /* Quick Actions - stack buttons on very small screens */
+  .mt-16 .grid-cols-1.md\:grid-cols-3 {
+    grid-template-columns: 1fr !important;
+    gap: 0.75rem !important;
+  }
+  
+  /* Filter section - improve spacing */
+  .card .grid-cols-1.md\:grid-cols-4 {
+    gap: 0.75rem !important;
+  }
+  
+  /* Hedgehog cards - adjust for better mobile display */
+  #hedgehogs-list .bg-white {
+    padding: 1rem !important;
+    transition: none !important; /* Disable hover animations on mobile */
+  }
+  
+  #hedgehogs-list .bg-white:active {
+    transform: scale(0.98) !important;
+  }
+  
+  /* Export modal - adjust grid for format selection */
+  .grid-cols-3 {
+    grid-template-columns: 1fr !important;
+  }
+  
+  /* Tab navigation - increase touch target size */
+  .border-b nav button {
+    padding: 0.75rem 1rem !important;
+    margin-right: 0.5rem !important;
+  }
+  
+  /* Adjust modal content for mobile */
+  .modal-content, .bg-white.shadow-2xl {
+    width: 95% !important;
+    max-width: 95% !important;
+    border-radius: 0.75rem !important;
+  }
+  
+  /* Improve scrollable containers for mobile */
+  .max-h-60.overflow-y-auto {
+    max-height: 40vh !important; /* Use viewport height instead of fixed pixels */
+  }
+  
+  /* Chart container - ensure responsive sizing */
+  #weight-chart {
+    height: 250px !important;
+  }
+  
+  /* Adjust form layouts for very small screens */
+  .grid-cols-1.md\:grid-cols-2 input,
+  .grid-cols-1.md\:grid-cols-2 select,
+  .grid-cols-1.md\:grid-cols-2 textarea {
+    font-size: 16px !important; /* Prevent iOS zoom on focus */
+  }
+}
+
+/* Improve mobile navigation */
+@media (max-width: 640px) {
+  /* Make sidebar wider on very small screens for better touch targets */
+  .sidebar {
+    width: 75% !important;
+    max-width: 280px !important;
+  }
+  
+  /* Increase size of mobile menu button */
+  #mobile-menu-btn {
+    padding: 0.5rem !important;
+  }
+  
+  /* Improve mobile header spacing */
+  .mobile-header {
+    padding: 0.75rem 1rem !important;
+  }
+}
+
+/* Fix for iOS devices to prevent zoom on input focus */
+@media (max-width: 640px) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Improve toast notifications on mobile */
+@media (max-width: 640px) {
+  #toast-container {
+    width: 90% !important;
+    left: 5% !important;
+    right: 5% !important;
+  }
+  
+  #toast-container > div {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}
+
+/* Improve loading overlay for mobile */
+@media (max-width: 640px) {
+  #loading-overlay > div {
+    width: 90% !important;
+    max-width: 90% !important;
+  }
+}
+
+/* Improve delete confirmation modal for mobile */
+@media (max-width: 640px) {
+  .fixed.inset-0.bg-black.bg-opacity-50.z-50.flex.items-center.justify-center.p-4 > div {
+    width: 90% !important;
+    max-width: 90% !important;
+  }
+}
+
+/* Touch interaction improvements */
+@media (max-width: 640px) {
+  /* Improved touch feedback for buttons */
+  .touch-active {
+    transform: scale(0.97) !important;
+    opacity: 0.9 !important;
+    transition: transform 0.1s ease-in-out, opacity 0.1s ease-in-out !important;
+  }
+  
+  /* Larger touch targets for range inputs */
+  .touch-friendly-range {
+    height: 44px !important;
+    padding: 12px 0 !important;
+  }
+  
+  /* Improved touch targets for canvas interactions */
+  canvas {
+    touch-action: none; /* Disable browser handling of touch gestures */
+  }
+  
+  /* Prevent text selection during touch interactions */
+  .no-select {
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+  }
+  
+  /* Improved touch feedback for interactive elements */
+  .card:active,
+  .btn-primary:active,
+  .btn-secondary:active,
+  .btn-danger:active,
+  button:active {
+    transform: scale(0.97) !important;
+    transition: transform 0.1s ease-in-out !important;
+  }
+  
+  /* Ensure all interactive elements have sufficient touch targets */
+  .sidebar-icon-mobile,
+  .nav-item,
+  .form-input,
+  select,
+  button,
+  input[type="checkbox"] + label,
+  input[type="radio"] + label {
+    min-height: 44px !important;
+    min-width: 44px !important;
+    display: flex !important;
+    align-items: center !important;
+  }
+  
+  /* Add spacing between touch targets */
+  .touch-spacing > * {
+    margin-bottom: 8px !important;
+  }
+  
+  /* Ensure form controls are easily tappable */
+  input[type="checkbox"],
+  input[type="radio"] {
+    transform: scale(1.2) !important;
+    margin: 0 8px !important;
+  }
+  
+  /* Bottom Navigation Bar Styles */
+  .bottom-nav-item {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 8px 4px !important;
+    color: #4B5563 !important; /* text-gray-600 */
+    transition: all 0.2s ease-in-out !important;
+    border-radius: 8px !important;
+    min-width: 64px !important;
+    min-height: 56px !important;
+  }
+  
+  .bottom-nav-item.active {
+    color: #8B4513 !important; /* text-hedgehog-brown */
+    font-weight: 500 !important;
+  }
+  
+  .bottom-nav-item.active i {
+    color: #8B4513 !important; /* text-hedgehog-brown */
+  }
+  
+  .bottom-nav-item:active {
+    background-color: rgba(0, 0, 0, 0.05) !important;
+    transform: scale(0.95) !important;
+  }
+  
+  /* Add safe area padding for iOS devices */
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0) !important;
+  }
+  
+  /* Swipe Navigation Styles */
+  .swipe-indicators {
+    position: fixed !important;
+    top: 50% !important;
+    left: 0 !important;
+    right: 0 !important;
+    transform: translateY(-50%) !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    pointer-events: none !important;
+    z-index: 30 !important;
+  }
+  
+  .swipe-indicator {
+    display: flex !important;
+    align-items: center !important;
+    padding: 12px !important;
+    background-color: rgba(255, 255, 255, 0.8) !important;
+    border-radius: 8px !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1) !important;
+    opacity: 0.7 !important;
+    transition: opacity 0.3s ease-in-out !important;
+    max-width: 120px !important;
+  }
+  
+  .swipe-indicator.left {
+    margin-left: 8px !important;
+    border-top-left-radius: 0 !important;
+    border-bottom-left-radius: 0 !important;
+  }
+  
+  .swipe-indicator.right {
+    margin-right: 8px !important;
+    border-top-right-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+  }
+  
+  .swipe-indicator i {
+    color: #8B4513 !important; /* hedgehog-brown */
+    font-size: 14px !important;
+  }
+  
+  .swipe-indicator span {
+    font-size: 12px !important;
+    margin: 0 6px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+  
+  /* Page Transition Animations */
+  .page-transition {
+    position: relative !important;
+    overflow-x: hidden !important;
+  }
+  
+  .slide-left {
+    animation: slideOutLeft 0.3s forwards !important;
+  }
+  
+  .slide-right {
+    animation: slideOutRight 0.3s forwards !important;
+  }
+  
+  @keyframes slideOutLeft {
+    from { transform: translateX(0); }
+    to { transform: translateX(-30%); opacity: 0.7; }
+  }
+  
+  @keyframes slideOutRight {
+    from { transform: translateX(0); }
+    to { transform: translateX(30%); opacity: 0.7; }
+  }
+}

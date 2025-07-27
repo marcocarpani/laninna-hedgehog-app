@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="it" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏠 Gestione Stanze - Centro La Ninna</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="/static/css/mobile.css" rel="stylesheet">
+    <link href="/static/css/desktop.css" rel="stylesheet">
+    <link href="/static/css/mobile-fixes.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'hedgehog-brown': '#8B4513',
+                        'hedgehog-tan': '#D2691E',
+                        'hedgehog-light': '#F4A460',
+                        'cozy-beige': '#F5F5DC'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="h-full bg-gradient-to-br from-cozy-beige via-green-50 to-blue-50">
+<!-- Mobile Header -->
+<div class="mobile-header">
+    <button id="mobile-menu-btn" class="touch-target focus-ring">
+        <i class="fas fa-bars text-hedgehog-brown"></i>
+    </button>
+    <div class="flex items-center space-x-2">
+        <div class="text-2xl">🦔</div>
+        <h1 class="text-lg font-bold text-hedgehog-brown">Stanze</h1>
+    </div>
+    <div class="w-10"></div>
+</div>
+
+<div class="flex h-screen bg-gradient-to-br from-cozy-beige via-green-50 to-blue-50">
+    <!-- Sidebar will be injected here by JavaScript -->
+    
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <main class="flex-1 overflow-x-hidden overflow-y-auto bg-transparent">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="space-y-6">
+        <!-- Header -->
+        <div class="flex justify-between items-center">
+            <h1 class="text-3xl font-bold text-hedgehog-brown">🏠 Gestione Stanze</h1>
+            <div class="flex space-x-4">
+                <button onclick="openExportModal()"
+                        class="bg-amber-500 text-white px-4 py-2 rounded-lg hover:bg-amber-600">
+                    <i class="fas fa-download mr-2"></i>Esporta
+                </button>
+                <button onclick="openRoomForm()"
+                        class="bg-hedgehog-brown text-white px-6 py-3 rounded-full hover:bg-hedgehog-tan transition-all duration-300">
+                    <i class="fas fa-plus mr-2"></i>Nuova Stanza
+                </button>
+            </div>
+        </div>
+
+        <!-- Rooms Grid -->
+        <div id="rooms-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="col-span-full text-center py-12">
+                <div class="text-6xl mb-4">🏠</div>
+                <h3 class="text-xl font-bold text-gray-600 mb-2">Caricamento stanze...</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div id="main-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center p-6 border-b border-gray-200">
+            <h2 class="text-2xl font-bold text-hedgehog-brown" id="modal-title">Modal</h2>
+            <button onclick="document.getElementById('main-modal').classList.add('hidden')"
+                    class="text-gray-400 hover:text-gray-600 text-2xl">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div id="modal-content" class="p-6"></div>
+    </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script src="/static/js/mobile.js"></script>
+<script>
+// Check authentication
+if (!localStorage.getItem('token')) {
+    window.location.href = '/login';
+}
+
+function logout() {
+    localStorage.removeItem('token');
+    window.location.href = '/login';
+}
+
+let currentRooms = [];
+
+// Load rooms on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadRooms();
+});
+
+async function loadRooms() {
+    try {
+        const response = await fetch('/api/rooms', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        
+        if (response.ok) {
+            currentRooms = await response.json();
+            renderRooms(currentRooms);
+        } else {
+            showError('Errore nel caricamento delle stanze');
+        }
+    } catch (error) {
+        showError('Errore di connessione');
+    }
+}
+
+function renderRooms(rooms) {
+    const container = document.getElementById('rooms-list');
+    
+    if (rooms.length === 0) {
+        container.innerHTML = `
+            <div class="col-span-full text-center py-12">
+                <div class="text-6xl mb-4">🏠</div>
+                <h3 class="text-xl font-bold text-gray-600 mb-2">Nessuna stanza trovata</h3>
+                <p class="text-gray-500">Crea la prima stanza per iniziare</p>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = rooms.map(room => `
+        <div class="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl hover:scale-105 transition-all duration-300 cursor-pointer">
+            <div class="flex justify-between items-start mb-4">
+                <h3 class="text-xl font-bold text-hedgehog-brown">${room.name}</h3>
+                <div class="flex space-x-2">
+                    <button onclick="openAreaForm(${room.id})" class="text-green-600 hover:text-green-800" title="Aggiungi Area">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                    <button onclick="editRoom(${room.id})" class="text-blue-600 hover:text-blue-800" title="Modifica">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button onclick="deleteRoom(${room.id})" class="text-red-600 hover:text-red-800" title="Elimina">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="space-y-2 text-sm text-gray-600">
+                <p><i class="fas fa-ruler-combined mr-2"></i>${room.width}m x ${room.height}m</p>
+                <p><i class="fas fa-bed mr-2"></i>${room.areas ? room.areas.length : 0} aree</p>
+                <p><i class="fas fa-paw mr-2"></i>${room.occupied_count || 0} ricci ospitati</p>
+            </div>
+
+            ${room.description ? `<p class="mt-3 text-gray-700">${room.description}</p>` : ''}
+
+            ${room.areas && room.areas.length > 0 ? `
+                <div class="mt-4 pt-4 border-t">
+                    <h4 class="font-medium text-gray-800 mb-2">Aree:</h4>
+                    <div class="grid grid-cols-2 gap-2">
+                        ${room.areas.map(area => `
+                            <div class="bg-gray-50 rounded p-2 text-xs">
+                                <div class="font-medium">${area.name}</div>
+                                <div class="text-gray-600">${area.hedgehogs ? area.hedgehogs.length : 0}/${area.max_capacity}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            ` : ''}
+        </div>
+    `).join('');
+}
+
+function openRoomForm() {
+    const formHTML = `
+        <div class="space-y-6">
+            <h2 class="text-2xl font-bold text-hedgehog-brown">🏠 Nuova Stanza</h2>
+            
+            <form id="roomForm" class="space-y-4">
+                <div>
+                    <label class="block text-gray-700 font-bold mb-2">Nome Stanza *</label>
+                    <input type="text" id="name" name="name" required
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown"
+                           placeholder="es. Stanza Principale">
+                </div>
+
+                <div>
+                    <label class="block text-gray-700 font-bold mb-2">Descrizione</label>
+                    <textarea id="description" name="description" rows="3"
+                              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown"
+                              placeholder="Descrizione della stanza..."></textarea>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-gray-700 font-bold mb-2">Larghezza (m)</label>
+                        <input type="number" id="width" name="width" step="0.1" min="0.1" value="5"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-bold mb-2">Altezza (m)</label>
+                        <input type="number" id="height" name="height" step="0.1" min="0.1" value="5"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown">
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-4 pt-4 border-t">
+                    <button type="button" onclick="document.getElementById('main-modal').classList.add('hidden')"
+                            class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                        Annulla
+                    </button>
+                    <button type="submit"
+                            class="bg-hedgehog-brown text-white px-6 py-2 rounded-lg hover:bg-hedgehog-tan">
+                        <i class="fas fa-save mr-2"></i>Salva
+                    </button>
+                </div>
+            </form>
+        </div>
+    `;
+    
+    document.getElementById('modal-content').innerHTML = formHTML;
+    document.getElementById('main-modal').classList.remove('hidden');
+    
+    // Handle form submission
+    document.getElementById('roomForm').addEventListener('submit', handleRoomSubmit);
+}
+
+function openAreaForm(roomId) {
+    const formHTML = `
+        <div class="space-y-6">
+            <h2 class="text-2xl font-bold text-hedgehog-brown">📍 Nuova Area</h2>
+            
+            <form id="areaForm" class="space-y-4">
+                <input type="hidden" id="room_id" name="room_id" value="${roomId}">
+
+                <div>
+                    <label class="block text-gray-700 font-bold mb-2">Nome Area *</label>
+                    <input type="text" id="name" name="name" required
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown"
+                           placeholder="es. Area A">
+                </div>
+
+                <div>
+                    <label class="block text-gray-700 font-bold mb-2">Capacità Massima</label>
+                    <input type="number" id="max_capacity" name="max_capacity" min="1" value="1"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-gray-700 font-bold mb-2">Posizione X</label>
+                        <input type="number" id="x" name="x" step="0.1" min="0" value="0"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-bold mb-2">Posizione Y</label>
+                        <input type="number" id="y" name="y" step="0.1" min="0" value="0"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-gray-700 font-bold mb-2">Larghezza</label>
+                        <input type="number" id="width" name="width" step="0.1" min="0.1" value="1"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-bold mb-2">Altezza</label>
+                        <input type="number" id="height" name="height" step="0.1" min="0.1" value="1"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown">
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-4 pt-4 border-t">
+                    <button type="button" onclick="document.getElementById('main-modal').classList.add('hidden')"
+                            class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                        Annulla
+                    </button>
+                    <button type="submit"
+                            class="bg-hedgehog-brown text-white px-6 py-2 rounded-lg hover:bg-hedgehog-tan">
+                        <i class="fas fa-save mr-2"></i>Salva
+                    </button>
+                </div>
+            </form>
+        </div>
+    `;
+    
+    document.getElementById('modal-content').innerHTML = formHTML;
+    document.getElementById('main-modal').classList.remove('hidden');
+    
+    // Handle form submission
+    document.getElementById('areaForm').addEventListener('submit', handleAreaSubmit);
+}
+
+function openExportModal() {
+    const exportHTML = `
+        <div class="space-y-6">
+            <h2 class="text-2xl font-bold text-hedgehog-brown">📈 Esporta Dati</h2>
+            
+            <div>
+                <label class="block text-gray-700 font-bold mb-2">Formato</label>
+                <div class="grid grid-cols-3 gap-4">
+                    <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                        <input type="radio" name="format" value="pdf" checked class="mr-2">
+                        <i class="fas fa-file-pdf text-red-500 mr-2"></i>PDF
+                    </label>
+                    <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                        <input type="radio" name="format" value="excel" class="mr-2">
+                        <i class="fas fa-file-excel text-green-500 mr-2"></i>Excel
+                    </label>
+                    <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                        <input type="radio" name="format" value="csv" class="mr-2">
+                        <i class="fas fa-file-csv text-blue-500 mr-2"></i>CSV
+                    </label>
+                </div>
+            </div>
+
+            <div class="flex justify-end space-x-4 pt-4 border-t">
+                <button onclick="document.getElementById('main-modal').classList.add('hidden')"
+                        class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                    Annulla
+                </button>
+                <button onclick="startExport()"
+                        class="bg-hedgehog-brown text-white px-6 py-2 rounded-lg hover:bg-hedgehog-tan">
+                    <i class="fas fa-download mr-2"></i>Esporta
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('modal-content').innerHTML = exportHTML;
+    document.getElementById('main-modal').classList.remove('hidden');
+}
+
+async function startExport() {
+    const format = document.querySelector('input[name="format"]:checked').value;
+    
+    try {
+        const response = await fetch(`/api/export/rooms/${format}`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        
+        if (response.ok) {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `rooms.${format}`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            showToast('Export completato!', 'success');
+        } else {
+            showToast('Errore durante l\'export', 'error');
+        }
+    } catch (error) {
+        showToast('Errore di connessione', 'error');
+    }
+    
+    document.getElementById('main-modal').classList.add('hidden');
+}
+
+async function editRoom(id) {
+    try {
+        const response = await fetch(`/api/rooms/${id}`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        const room = await response.json();
+
+        const formHTML = `
+            <div class="space-y-6">
+                <h2 class="text-2xl font-bold text-hedgehog-brown">🏠 Modifica Stanza</h2>
+                
+                <form id="roomEditForm" class="space-y-4">
+                    <input type="hidden" id="room_id" value="${id}">
+                    <div>
+                        <label class="block text-gray-700 font-bold mb-2">Nome Stanza *</label>
+                        <input type="text" id="name" name="name" required value="${room.name}"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown"
+                               placeholder="es. Stanza Principale">
+                    </div>
+
+                    <div>
+                        <label class="block text-gray-700 font-bold mb-2">Descrizione</label>
+                        <textarea id="description" name="description" rows="3"
+                                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown"
+                                  placeholder="Descrizione della stanza...">${room.description || ''}</textarea>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-gray-700 font-bold mb-2">Larghezza (m)</label>
+                            <input type="number" id="width" name="width" step="0.1" min="0.1" value="${room.width}"
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown">
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 font-bold mb-2">Altezza (m)</label>
+                            <input type="number" id="height" name="height" step="0.1" min="0.1" value="${room.height}"
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown">
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end space-x-4 pt-4 border-t">
+                        <button type="button" onclick="document.getElementById('main-modal').classList.add('hidden')"
+                                class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                            Annulla
+                        </button>
+                        <button type="submit"
+                                class="bg-hedgehog-brown text-white px-6 py-2 rounded-lg hover:bg-hedgehog-tan">
+                            <i class="fas fa-save mr-2"></i>Aggiorna
+                        </button>
+                    </div>
+                </form>
+            </div>
+        `;
+        
+        document.getElementById('modal-content').innerHTML = formHTML;
+        document.getElementById('main-modal').classList.remove('hidden');
+        
+        // Handle form submission
+        document.getElementById('roomEditForm').addEventListener('submit', handleRoomEdit);
+    } catch (error) {
+        showToast('Errore nel caricamento dei dati della stanza', 'error');
+    }
+}
+
+function deleteRoom(id) {
+    showDeleteModal(
+        'Elimina Stanza',
+        'Questa azione non può essere annullata. Tutte le aree e i dati associati verranno eliminati.',
+        () => {
+            fetch(`/api/rooms/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            })
+            .then(response => {
+                if (response.ok) {
+                    showToast('Stanza eliminata con successo', 'success');
+                    loadRooms();
+                } else {
+                    showError('Errore nell\'eliminazione');
+                }
+            });
+        }
+    );
+}
+
+function showError(message) {
+    showToast(message, 'error');
+}
+
+async function handleRoomEdit(e) {
+    e.preventDefault();
+    
+    const roomId = document.getElementById('room_id').value;
+    const formData = new FormData(e.target);
+    const data = {
+        name: formData.get('name'),
+        description: formData.get('description'),
+        width: parseFloat(formData.get('width')),
+        height: parseFloat(formData.get('height'))
+    };
+
+    try {
+        const response = await fetch(`/api/rooms/${roomId}`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+
+        if (response.ok) {
+            document.getElementById('main-modal').classList.add('hidden');
+            showToast('Stanza aggiornata con successo', 'success');
+            loadRooms();
+        } else {
+            const error = await response.json();
+            showToast('Errore: ' + (error.error || 'Errore sconosciuto'), 'error');
+        }
+    } catch (error) {
+        showToast('Errore di connessione', 'error');
+    }
+}
+
+function logout() {
+    localStorage.removeItem('token');
+    window.location.href = '/login';
+}
+
+async function handleRoomSubmit(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    const data = {
+        name: formData.get('name'),
+        description: formData.get('description'),
+        width: parseFloat(formData.get('width')),
+        height: parseFloat(formData.get('height'))
+    };
+
+    try {
+        const response = await fetch('/api/rooms', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+
+        if (response.ok) {
+            document.getElementById('main-modal').classList.add('hidden');
+            showToast('Stanza creata con successo', 'success');
+            loadRooms();
+        } else {
+            const error = await response.json();
+            showToast('Errore: ' + (error.error || 'Errore sconosciuto'), 'error');
+        }
+    } catch (error) {
+        showToast('Errore di connessione', 'error');
+    }
+}
+
+async function handleAreaSubmit(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    const data = {
+        room_id: parseInt(formData.get('room_id')),
+        name: formData.get('name'),
+        max_capacity: parseInt(formData.get('max_capacity')),
+        x: parseFloat(formData.get('x')),
+        y: parseFloat(formData.get('y')),
+        width: parseFloat(formData.get('width')),
+        height: parseFloat(formData.get('height'))
+    };
+
+    try {
+        const response = await fetch('/api/areas', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+
+        if (response.ok) {
+            document.getElementById('main-modal').classList.add('hidden');
+            showToast('Area creata con successo', 'success');
+            loadRooms();
+        } else {
+            const error = await response.json();
+            showToast('Errore: ' + (error.error || 'Errore sconosciuto'), 'error');
+        }
+    } catch (error) {
+        showToast('Errore di connessione', 'error');
+    }
+}
+</script>
+</body>
+</html>

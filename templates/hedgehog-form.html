@@ -1,0 +1,111 @@
+<div class="space-y-6">
+    <h2 class="text-2xl font-bold text-hedgehog-brown">🦔 Nuovo Riccio</h2>
+    
+    <form id="hedgehogForm" class="space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-gray-700 font-bold mb-2">Nome *</label>
+                <input type="text" id="name" name="name" required
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown">
+            </div>
+            <div>
+                <label class="block text-gray-700 font-bold mb-2">Stato</label>
+                <select id="status" name="status"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown">
+                    <option value="in_care">In cura</option>
+                    <option value="recovered">Recuperato</option>
+                    <option value="deceased">Deceduto</option>
+                </select>
+            </div>
+        </div>
+
+        <div>
+            <label class="block text-gray-700 font-bold mb-2">Descrizione</label>
+            <textarea id="description" name="description" rows="3"
+                      class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown"
+                      placeholder="Condizioni di salute, caratteristiche particolari..."></textarea>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-gray-700 font-bold mb-2">Data di Arrivo</label>
+                <input type="date" id="arrival_date" name="arrival_date"
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown">
+            </div>
+            <div>
+                <label class="block text-gray-700 font-bold mb-2">Area di Alloggio</label>
+                <select id="area_id" name="area_id"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown">
+                    <option value="">Nessuna area assegnata</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="flex justify-end space-x-4 pt-4 border-t">
+            <button type="button" onclick="document.getElementById('main-modal').classList.add('hidden')"
+                    class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                Annulla
+            </button>
+            <button type="submit"
+                    class="bg-hedgehog-brown text-white px-6 py-2 rounded-lg hover:bg-hedgehog-tan">
+                <i class="fas fa-save mr-2"></i>Salva
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+// Load areas for dropdown
+fetch('/api/areas', {
+    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+})
+.then(response => response.json())
+.then(areas => {
+    const select = document.getElementById('area_id');
+    areas.forEach(area => {
+        const option = document.createElement('option');
+        option.value = area.id;
+        option.textContent = `${area.room?.name || 'Stanza'} - ${area.name}`;
+        select.appendChild(option);
+    });
+});
+
+// Set default date
+document.getElementById('arrival_date').value = new Date().toISOString().split('T')[0];
+
+// Handle form submission
+document.getElementById('hedgehogForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    const data = {
+        name: formData.get('name'),
+        status: formData.get('status'),
+        description: formData.get('description'),
+        arrival_date: formData.get('arrival_date'),
+        area_id: formData.get('area_id') ? parseInt(formData.get('area_id')) : null
+    };
+
+    try {
+        const response = await fetch('/api/hedgehogs', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+
+        if (response.ok) {
+            document.getElementById('main-modal').classList.add('hidden');
+            showToast('Riccio aggiunto con successo', 'success');
+            window.location.href = '/hedgehogs';
+        } else {
+            const error = await response.json();
+            showToast('Errore: ' + (error.error || 'Errore sconosciuto'), 'error');
+        }
+    } catch (error) {
+        showToast('Errore di connessione', 'error');
+    }
+});
+</script>

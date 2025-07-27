@@ -1,0 +1,79 @@
+<div class="space-y-6">
+    <h2 class="text-2xl font-bold text-hedgehog-brown">🏠 Nuova Stanza</h2>
+    
+    <form id="roomForm" class="space-y-4">
+        <div>
+            <label class="block text-gray-700 font-bold mb-2">Nome Stanza *</label>
+            <input type="text" id="name" name="name" required
+                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown"
+                   placeholder="es. Stanza Principale">
+        </div>
+
+        <div>
+            <label class="block text-gray-700 font-bold mb-2">Descrizione</label>
+            <textarea id="description" name="description" rows="3"
+                      class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown"
+                      placeholder="Descrizione della stanza..."></textarea>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <label class="block text-gray-700 font-bold mb-2">Larghezza (m)</label>
+                <input type="number" id="width" name="width" step="0.1" min="0.1" value="5"
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown">
+            </div>
+            <div>
+                <label class="block text-gray-700 font-bold mb-2">Altezza (m)</label>
+                <input type="number" id="height" name="height" step="0.1" min="0.1" value="5"
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown">
+            </div>
+        </div>
+
+        <div class="flex justify-end space-x-4 pt-4 border-t">
+            <button type="button" onclick="document.getElementById('main-modal').classList.add('hidden')"
+                    class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                Annulla
+            </button>
+            <button type="submit"
+                    class="bg-hedgehog-brown text-white px-6 py-2 rounded-lg hover:bg-hedgehog-tan">
+                <i class="fas fa-save mr-2"></i>Salva
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+document.getElementById('roomForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    const data = {
+        name: formData.get('name'),
+        description: formData.get('description'),
+        width: parseFloat(formData.get('width')),
+        height: parseFloat(formData.get('height'))
+    };
+
+    try {
+        const response = await fetch('/api/rooms', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+
+        if (response.ok) {
+            document.getElementById('main-modal').classList.add('hidden');
+            showToast('Stanza creata con successo', 'success');
+            window.location.href = '/rooms';
+        } else {
+            const error = await response.json();
+            showToast('Errore: ' + (error.error || 'Errore sconosciuto'), 'error');
+        }
+    } catch (error) {
+        showToast('Errore di connessione', 'error');
+    }
+});
+</script>

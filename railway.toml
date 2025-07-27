@@ -1,0 +1,28 @@
+# 🦔 La Ninna - Railway Configuration
+
+[build]
+  builder = "nixpacks"
+  buildCommand = "go install github.com/swaggo/swag/cmd/swag@latest && ~/go/bin/swag init && go build -o laninna-app ."
+
+[deploy]
+  startCommand = "./laninna-app"
+  healthcheckPath = "/health"
+  healthcheckTimeout = 300
+  restartPolicyType = "ON_FAILURE"
+  restartPolicyMaxRetries = 10
+
+[environments.production]
+  PORT = "8080"
+  GIN_MODE = "release"
+  DB_PATH = "/app/data/laninna.db"
+  AUTO_MIGRATE = "true"
+  JWT_SECRET = "${{JWT_SECRET}}"
+  FONTS_PATH = "./fonts"
+  
+[environments.staging]
+  PORT = "8080"
+  GIN_MODE = "debug"
+  DB_PATH = "/app/data/laninna-staging.db"
+  AUTO_MIGRATE = "true"
+  JWT_SECRET = "${{JWT_SECRET_STAGING}}"
+  FONTS_PATH = "./fonts"

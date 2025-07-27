@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="it" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📚 Documentazione - Centro La Ninna</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="/static/css/mobile.css" rel="stylesheet">
+    <link href="/static/css/desktop.css" rel="stylesheet">
+    <link href="/static/css/mobile-fixes.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'hedgehog-brown': '#8B4513',
+                        'hedgehog-tan': '#D2691E',
+                        'hedgehog-light': '#F4A460',
+                        'cozy-beige': '#F5F5DC'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="h-full bg-gradient-to-br from-cozy-beige via-green-50 to-blue-50">
+
+<!-- Mobile Header -->
+<div class="mobile-header">
+    <button id="mobile-menu-btn" class="touch-target focus-ring">
+        <i class="fas fa-bars text-hedgehog-brown"></i>
+    </button>
+    <div class="flex items-center space-x-2">
+        <div class="text-2xl">🦔</div>
+        <h1 class="text-lg font-bold text-hedgehog-brown">Documentazione</h1>
+    </div>
+    <div class="w-10"></div>
+</div>
+
+<div class="min-h-screen bg-gradient-to-br from-cozy-beige via-green-50 to-blue-50">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Header -->
+        <div class="text-center mb-12">
+            <div class="text-6xl mb-4">📚</div>
+            <h1 class="text-4xl font-bold text-hedgehog-brown mb-4">Documentazione La Ninna</h1>
+            <p class="text-xl text-gray-600">Guida completa per l'utilizzo del sistema di gestione</p>
+        </div>
+
+        <!-- Navigation -->
+        <div class="bg-white rounded-2xl shadow-lg p-6 mb-8">
+            <h2 class="text-2xl font-bold text-hedgehog-brown mb-4">📖 Indice</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <a href="#getting-started" class="flex items-center p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                    <i class="fas fa-play-circle text-green-600 mr-3"></i>
+                    <span>1. Primi Passi</span>
+                </a>
+                <a href="#hedgehogs" class="flex items-center p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                    <i class="fas fa-paw text-hedgehog-brown mr-3"></i>
+                    <span>2. Gestione Ricci</span>
+                </a>
+                <a href="#rooms" class="flex items-center p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                    <i class="fas fa-door-open text-blue-600 mr-3"></i>
+                    <span>3. Gestione Stanze</span>
+                </a>
+                <a href="#monitoring" class="flex items-center p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                    <i class="fas fa-chart-line text-purple-600 mr-3"></i>
+                    <span>4. Monitoraggio</span>
+                </a>
+                <a href="#notifications" class="flex items-center p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                    <i class="fas fa-bell text-yellow-600 mr-3"></i>
+                    <span>5. Notifiche</span>
+                </a>
+                <a href="#export" class="flex items-center p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                    <i class="fas fa-download text-amber-600 mr-3"></i>
+                    <span>6. Esportazione</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Getting Started -->
+        <section id="getting-started" class="bg-white rounded-2xl shadow-lg p-6 mb-8">
+            <h2 class="text-2xl font-bold text-hedgehog-brown mb-6">🚀 1. Primi Passi</h2>
+            
+            <div class="space-y-6">
+                <div class="border-l-4 border-green-500 pl-4">
+                    <h3 class="text-lg font-semibold mb-2">Accesso al Sistema</h3>
+                    <p class="text-gray-700 mb-2">Per accedere al sistema utilizzare le credenziali fornite:</p>
+                    <div class="bg-gray-100 p-3 rounded-lg">
+                        <p><strong>Username:</strong> admin</p>
+                        <p><strong>Password:</strong> admin123</p>
+                    </div>
+                </div>
+
+                <div class="border-l-4 border-blue-500 pl-4">
+                    <h3 class="text-lg font-semibold mb-2">Dashboard Principale</h3>
+                    <p class="text-gray-700 mb-3">La dashboard mostra una panoramica completa del centro:</p>
+                    <ul class="list-disc list-inside text-gray-700 space-y-1">
+                        <li>Numero totale di ricci ospitati</li>
+                        <li>Stanze disponibili e occupate</li>
+                        <li>Ricci attualmente in cura</li>
+                        <li>Notifiche attive</li>
+                    </ul>
+                </div>
+
+                <div class="border-l-4 border-purple-500 pl-4">
+                    <h3 class="text-lg font-semibold mb-2">Navigazione</h3>
+                    <p class="text-gray-700 mb-3">Utilizzare la barra laterale per navigare tra le sezioni:</p>
+                    <ul class="list-disc list-inside text-gray-700 space-y-1">
+                        <li><strong>Dashboard:</strong> Panoramica generale</li>
+                        <li><strong>Ricci:</strong> Gestione degli animali</li>
+                        <li><strong>Stanze:</strong> Configurazione spazi</li>
+                        <li><strong>Builder:</strong> Progettazione layout</li>
+                        <li><strong>Notifiche:</strong> Avvisi e promemoria</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Hedgehogs Management -->
+        <section id="hedgehogs" class="bg-white rounded-2xl shadow-lg p-6 mb-8">
+            <h2 class="text-2xl font-bold text-hedgehog-brown mb-6">🦔 2. Gestione Ricci</h2>
+            
+            <div class="space-y-6">
+                <div class="border-l-4 border-hedgehog-brown pl-4">
+                    <h3 class="text-lg font-semibold mb-2">Aggiungere un Nuovo Riccio</h3>
+                    <ol class="list-decimal list-inside text-gray-700 space-y-2">
+                        <li>Cliccare su "Nuovo Riccio" nella pagina Ricci</li>
+                        <li>Compilare i campi obbligatori (Nome, Stato)</li>
+                        <li>Aggiungere descrizione e data di arrivo</li>
+                        <li>Assegnare un'area di alloggio se disponibile</li>
+                        <li>Salvare per completare la registrazione</li>
+                    </ol>
+                </div>
+
+                <div class="border-l-4 border-green-500 pl-4">
+                    <h3 class="text-lg font-semibold mb-2">Monitoraggio Peso</h3>
+                    <p class="text-gray-700 mb-3">Per registrare una pesata:</p>
+                    <ol class="list-decimal list-inside text-gray-700 space-y-2">
+                        <li>Selezionare il riccio dalla lista</li>
+                        <li>Cliccare sull'icona bilancia (⚖️)</li>
+                        <li>Inserire peso in grammi e data</li>
+                        <li>Aggiungere note se necessario</li>
+                        <li>Salvare la registrazione</li>
+                    </ol>
+                </div>
+
+                <div class="border-l-4 border-purple-500 pl-4">
+                    <h3 class="text-lg font-semibold mb-2">Gestione Terapie</h3>
+                    <p class="text-gray-700 mb-3">Per aggiungere una terapia:</p>
+                    <ol class="list-decimal list-inside text-gray-700 space-y-2">
+                        <li>Cliccare sull'icona pillola (💊) del riccio</li>
+                        <li>Inserire nome terapia e dosaggio</li>
+                        <li>Impostare date di inizio e fine</li>
+                        <li>Selezionare frequenza di somministrazione</li>
+                        <li>Aggiungere note specifiche</li>
+                    </ol>
+                </div>
+
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <div class="flex items-center mb-2">
+                        <i class="fas fa-lightbulb text-yellow-600 mr-2"></i>
+                        <strong class="text-yellow-800">Suggerimento</strong>
+                    </div>
+                    <p class="text-yellow-700">Utilizzare i filtri per trovare rapidamente ricci per stato, stanza o nome.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Rooms Management -->
+        <section id="rooms" class="bg-white rounded-2xl shadow-lg p-6 mb-8">
+            <h2 class="text-2xl font-bold text-hedgehog-brown mb-6">🏠 3. Gestione Stanze</h2>
+            
+            <div class="space-y-6">
+                <div class="border-l-4 border-blue-500 pl-4">
+                    <h3 class="text-lg font-semibold mb-2">Creare una Nuova Stanza</h3>
+                    <ol class="list-decimal list-inside text-gray-700 space-y-2">
+                        <li>Cliccare su "Nuova Stanza"</li>
+                        <li>Inserire nome e descrizione</li>
+                        <li>Specificare dimensioni (larghezza x altezza)</li>
+                        <li>Salvare per creare la stanza</li>
+                    </ol>
+                </div>
+
+                <div class="border-l-4 border-green-500 pl-4">
+                    <h3 class="text-lg font-semibold mb-2">Aggiungere Aree</h3>
+                    <p class="text-gray-700 mb-3">Le aree sono spazi specifici all'interno delle stanze:</p>
+                    <ol class="list-decimal list-inside text-gray-700 space-y-2">
+                        <li>Cliccare sull'icona "+" nella stanza desiderata</li>
+                        <li>Inserire nome area e capacità massima</li>
+                        <li>Impostare posizione e dimensioni</li>
+                        <li>Salvare per aggiungere l'area</li>
+                    </ol>
+                </div>
+
+                <div class="border-l-4 border-purple-500 pl-4">
+                    <h3 class="text-lg font-semibold mb-2">Room Builder</h3>
+                    <p class="text-gray-700 mb-3">Utilizzare il Room Builder per progettare visivamente:</p>
+                    <ul class="list-disc list-inside text-gray-700 space-y-1">
+                        <li>Trascinare e posizionare aree</li>
+                        <li>Ridimensionare elementi</li>
+                        <li>Visualizzare occupazione in tempo reale</li>
+                        <li>Salvare automaticamente le modifiche</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Monitoring -->
+        <section id="monitoring" class="bg-white rounded-2xl shadow-lg p-6 mb-8">
+            <h2 class="text-2xl font-bold text-hedgehog-brown mb-6">📊 4. Monitoraggio e Statistiche</h2>
+            
+            <div class="space-y-6">
+                <div class="border-l-4 border-blue-500 pl-4">
+                    <h3 class="text-lg font-semibold mb-2">Dashboard Statistiche</h3>
+                    <p class="text-gray-700 mb-3">La dashboard fornisce metriche in tempo reale:</p>
+                    <ul class="list-disc list-inside text-gray-700 space-y-1">
+                        <li>Conteggio ricci per stato</li>
+                        <li>Utilizzo stanze e aree</li>
+                        <li>Terapie attive</li>
+                        <li>Notifiche pendenti</li>
+                    </ul>
+                </div>
+
+                <div class="border-l-4 border-green-500 pl-4">
+                    <h3 class="text-lg font-semibold mb-2">Dettagli Riccio</h3>
+                    <p class="text-gray-700 mb-3">Cliccare su un riccio per visualizzare:</p>
+                    <ul class="list-disc list-inside text-gray-700 space-y-1">
+                        <li>Storico pesate con grafici</li>
+                        <li>Terapie attive e completate</li>
+                        <li>Informazioni generali</li>
+                        <li>Statistiche di salute</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Notifications -->
+        <section id="notifications" class="bg-white rounded-2xl shadow-lg p-6 mb-8">
+            <h2 class="text-2xl font-bold text-hedgehog-brown mb-6">🔔 5. Sistema Notifiche</h2>
+            
+            <div class="space-y-6">
+                <div class="border-l-4 border-yellow-500 pl-4">
+                    <h3 class="text-lg font-semibold mb-2">Tipi di Notifiche</h3>
+                    <ul class="list-disc list-inside text-gray-700 space-y-1">
+                        <li><strong>Critiche:</strong> Perdita peso grave, terapie scadute</li>
+                        <li><strong>Alte:</strong> Terapie in scadenza</li>
+                        <li><strong>Medie:</strong> Stagnazione peso, record mancanti</li>
+                        <li><strong>Basse:</strong> Promemoria generali</li>
+                    </ul>
+                </div>
+
+                <div class="border-l-4 border-blue-500 pl-4">
+                    <h3 class="text-lg font-semibold mb-2">Gestione Notifiche</h3>
+                    <p class="text-gray-700 mb-3">Le notifiche vengono generate automaticamente ogni 30 minuti per:</p>
+                    <ul class="list-disc list-inside text-gray-700 space-y-1">
+                        <li>Monitoraggio peso ricci</li>
+                        <li>Scadenze terapie</li>
+                        <li>Controlli sanitari</li>
+                        <li>Promemoria attività</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Export -->
+        <section id="export" class="bg-white rounded-2xl shadow-lg p-6 mb-8">
+            <h2 class="text-2xl font-bold text-hedgehog-brown mb-6">📥 6. Esportazione Dati</h2>
+            
+            <div class="space-y-6">
+                <div class="border-l-4 border-amber-500 pl-4">
+                    <h3 class="text-lg font-semibold mb-2">Formati Disponibili</h3>
+                    <ul class="list-disc list-inside text-gray-700 space-y-1">
+                        <li><strong>PDF:</strong> Report professionali con grafici</li>
+                        <li><strong>Excel:</strong> Fogli di calcolo dettagliati</li>
+                        <li><strong>CSV:</strong> Dati semplici per analisi</li>
+                    </ul>
+                </div>
+
+                <div class="border-l-4 border-green-500 pl-4">
+                    <h3 class="text-lg font-semibold mb-2">Come Esportare</h3>
+                    <ol class="list-decimal list-inside text-gray-700 space-y-2">
+                        <li>Cliccare su "Esporta" nella sezione desiderata</li>
+                        <li>Selezionare il formato preferito</li>
+                        <li>Cliccare "Esporta" per scaricare</li>
+                        <li>Il file verrà scaricato automaticamente</li>
+                    </ol>
+                </div>
+
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div class="flex items-center mb-2">
+                        <i class="fas fa-info-circle text-blue-600 mr-2"></i>
+                        <strong class="text-blue-800">Nota</strong>
+                    </div>
+                    <p class="text-blue-700">I report PDF includono grafici e sono ideali per presentazioni veterinarie.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Support -->
+        <div class="bg-hedgehog-brown text-white rounded-2xl shadow-lg p-6 text-center">
+            <div class="text-4xl mb-4">🆘</div>
+            <h2 class="text-2xl font-bold mb-4">Serve Aiuto?</h2>
+            <p class="mb-4">Per supporto tecnico o domande sul sistema, contattare l'amministratore.</p>
+            <div class="text-sm opacity-90">
+                Sistema La Ninna - Centro Recupero Ricci
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/static/js/mobile.js"></script>
+<script>
+// Check authentication
+if (!localStorage.getItem('token')) {
+    window.location.href = '/login';
+}
+
+function logout() {
+    localStorage.removeItem('token');
+    window.location.href = '/login';
+}
+
+// Smooth scrolling for navigation links
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+            target.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
+    });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="it" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Centro Ricci La Ninna</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="/static/css/mobile-fixes.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'hedgehog-brown': '#8B4513',
+                        'hedgehog-tan': '#D2691E',
+                        'cozy-beige': '#F5F5DC'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="h-full bg-gradient-to-br from-cozy-beige via-green-50 to-blue-50 flex items-center justify-center">
+    <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
+        <div class="text-center mb-8">
+            <div class="text-6xl mb-4">🦔</div>
+            <h1 class="text-3xl font-bold text-hedgehog-brown mb-2">Centro Ricci "La Ninna"</h1>
+            <p class="text-gray-600">Sistema di Gestione</p>
+        </div>
+
+        <form id="loginForm" class="space-y-6">
+            <div>
+                <label class="block text-gray-700 text-sm font-bold mb-2">
+                    <i class="fas fa-user mr-2"></i>Username
+                </label>
+                <input type="text" id="username" required
+                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-hedgehog-brown">
+            </div>
+
+            <div>
+                <label class="block text-gray-700 text-sm font-bold mb-2">
+                    <i class="fas fa-lock mr-2"></i>Password
+                </label>
+                <input type="password" id="password" required
+                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-hedgehog-brown">
+            </div>
+
+            <button type="submit"
+                    class="w-full bg-hedgehog-brown text-white py-3 px-4 rounded-lg hover:bg-hedgehog-tan transition-all duration-300 font-semibold">
+                <i class="fas fa-sign-in-alt mr-2"></i>Accedi
+            </button>
+        </form>
+
+        <div id="error-message" class="mt-4 text-red-500 text-center hidden"></div>
+
+        <div class="mt-8 text-center text-sm text-gray-600">
+            <p>Credenziali default:</p>
+            <p><strong>Username:</strong> admin</p>
+            <p><strong>Password:</strong> admin123</p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('error-message');
+
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    localStorage.setItem('token', data.token);
+                    window.location.href = '/';
+                } else {
+                    errorDiv.textContent = data.error || 'Errore durante il login';
+                    errorDiv.classList.remove('hidden');
+                }
+            } catch (error) {
+                errorDiv.textContent = 'Errore di connessione';
+                errorDiv.classList.remove('hidden');
+            }
+        });
+
+        // Clear any existing token and redirect if already logged in
+        const existingToken = localStorage.getItem('token');
+        if (existingToken) {
+            // Verify token is still valid
+            fetch('/api/verify-token', {
+                headers: { 'Authorization': `Bearer ${existingToken}` }
+            }).then(response => {
+                if (response.ok) {
+                    window.location.href = '/';
+                } else {
+                    localStorage.removeItem('token');
+                }
+            }).catch(() => {
+                localStorage.removeItem('token');
+            });
+        }
+    </script>
+</body>
+</html>

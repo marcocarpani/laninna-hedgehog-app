@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="it" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🛠️ Room Builder - Centro La Ninna</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="/static/css/mobile.css" rel="stylesheet">
+    <link href="/static/css/desktop.css" rel="stylesheet">
+    <link href="/static/css/mobile-fixes.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'hedgehog-brown': '#8B4513',
+                        'hedgehog-tan': '#D2691E',
+                        'hedgehog-light': '#F4A460',
+                        'cozy-beige': '#F5F5DC'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="h-full bg-gradient-to-br from-cozy-beige via-green-50 to-blue-50">
+<!-- Mobile Header -->
+<div class="mobile-header">
+    <button id="mobile-menu-btn" class="touch-target focus-ring">
+        <i class="fas fa-bars text-hedgehog-brown"></i>
+    </button>
+    <div class="flex items-center space-x-2">
+        <div class="text-2xl">🦔</div>
+        <h1 class="text-lg font-bold text-hedgehog-brown">Builder</h1>
+    </div>
+    <div class="w-10"></div>
+</div>
+
+<div class="flex h-screen bg-gradient-to-br from-cozy-beige via-green-50 to-blue-50">
+    <!-- Sidebar will be injected here by JavaScript -->
+    
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <main class="flex-1 overflow-x-hidden overflow-y-auto bg-transparent">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="space-y-6">
+        <!-- Header -->
+        <div class="flex justify-between items-center">
+            <h1 class="text-3xl font-bold text-hedgehog-brown">🛠️ Room Builder</h1>
+            <div class="flex space-x-4">
+                <select id="roomSelect" onchange="loadRoom(this.value)"
+                        class="px-4 py-2 border border-gray-300 rounded-lg">
+                    <option value="">Seleziona stanza</option>
+                </select>
+                <div class="text-sm text-gray-600 flex items-center">
+                    <i class="fas fa-info-circle mr-2"></i>Modifiche salvate automaticamente
+                </div>
+            </div>
+        </div>
+
+        <!-- Tools and Canvas -->
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <!-- Toolbar -->
+            <div class="bg-white rounded-2xl shadow-lg p-6">
+                <h3 class="text-lg font-bold text-hedgehog-brown mb-4">Strumenti</h3>
+                
+                <!-- Mode Selection -->
+                <div class="space-y-2 mb-6">
+                    <label class="block text-sm font-medium">Modalità</label>
+                    <div class="space-y-1">
+                        <label class="flex items-center">
+                            <input type="radio" name="mode" value="select" checked onchange="changeMode(this.value)">
+                            <span class="ml-2">Selezione</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="radio" name="mode" value="add" onchange="changeMode(this.value)">
+                            <span class="ml-2">Aggiungi Area</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="radio" name="mode" value="delete" onchange="changeMode(this.value)">
+                            <span class="ml-2">Elimina Area</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Area Properties -->
+                <div id="areaProperties" class="space-y-3">
+                    <h4 class="font-medium">Proprietà Area</h4>
+                    <input type="text" id="areaName" placeholder="Nome area" 
+                           class="w-full px-3 py-2 border rounded">
+                    <input type="number" id="areaCapacity" value="1" min="1" 
+                           class="w-full px-3 py-2 border rounded" placeholder="Capacità">
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="number" id="areaX" value="0" step="0.1" 
+                               class="px-2 py-1 border rounded" placeholder="X">
+                        <input type="number" id="areaY" value="0" step="0.1" 
+                               class="px-2 py-1 border rounded" placeholder="Y">
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="number" id="areaWidth" value="1" step="0.1" min="0.1" 
+                               class="px-2 py-1 border rounded" placeholder="Larghezza">
+                        <input type="number" id="areaHeight" value="1" step="0.1" min="0.1" 
+                               class="px-2 py-1 border rounded" placeholder="Altezza">
+                    </div>
+                    <button onclick="updateSelectedArea()" 
+                            class="w-full bg-blue-500 text-white py-2 rounded">
+                        Aggiorna Area
+                    </button>
+                </div>
+            </div>
+
+            <!-- Canvas Area -->
+            <div class="lg:col-span-3 bg-white rounded-2xl shadow-lg p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 id="roomTitle" class="text-lg font-bold">Seleziona una stanza</h3>
+                    <div class="flex items-center space-x-4">
+                        <span class="text-sm">Zoom:</span>
+                        <input type="range" id="zoomSlider" min="0.5" max="3" step="0.1" value="1" 
+                               onchange="updateZoom(this.value)" class="w-20">
+                        <span id="zoomValue" class="text-sm">100%</span>
+                    </div>
+                </div>
+
+                <!-- Canvas Container -->
+                <div id="canvasContainer" class="relative bg-gray-50 border-2 border-gray-300 rounded-lg no-select" 
+                     style="height: 600px;">
+                    <canvas id="roomCanvas" class="absolute top-0 left-0 cursor-crosshair"
+                            onmousedown="handleMouseDown(event)"
+                            onmousemove="handleMouseMove(event)"
+                            onmouseup="handleMouseUp(event)"></canvas>
+                    <!-- Touch instructions for mobile users -->
+                    <div class="absolute bottom-2 left-2 right-2 bg-white bg-opacity-80 p-2 rounded text-xs text-gray-600 lg:hidden">
+                        <div class="flex items-center justify-center space-x-4">
+                            <div class="flex items-center">
+                                <i class="fas fa-hand-pointer mr-1"></i>
+                                <span>Tap: Select</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-arrows-alt mr-1"></i>
+                                <span>Drag: Draw</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-hand-paper mr-1"></i>
+                                <span>Long press: Delete</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stats -->
+                <div class="mt-4 grid grid-cols-3 gap-4 text-sm">
+                    <div class="bg-gray-100 p-3 rounded text-center">
+                        <div class="font-bold text-blue-600" id="totalAreas">0</div>
+                        <div class="text-gray-600">Aree Totali</div>
+                    </div>
+                    <div class="bg-gray-100 p-3 rounded text-center">
+                        <div class="font-bold text-green-600" id="occupiedAreas">0</div>
+                        <div class="text-gray-600">Aree Occupate</div>
+                    </div>
+                    <div class="bg-gray-100 p-3 rounded text-center">
+                        <div class="font-bold text-amber-600" id="totalCapacity">0</div>
+                        <div class="text-gray-600">Capacità Totale</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script src="/static/js/mobile.js"></script>
+<script>
+// Check authentication
+if (!localStorage.getItem('token')) {
+    window.location.href = '/login';
+}
+
+function logout() {
+    localStorage.removeItem('token');
+    window.location.href = '/login';
+}
+
+let canvas, ctx;
+let currentRoom = null;
+let currentMode = 'select';
+let selectedArea = null;
+let isDrawing = false;
+let startX, startY;
+let zoom = 1;
+
+document.addEventListener('DOMContentLoaded', function() {
+    canvas = document.getElementById('roomCanvas');
+    ctx = canvas.getContext('2d');
+    initCanvas();
+    loadRooms();
+});
+
+function initCanvas() {
+    const container = document.getElementById('canvasContainer');
+    canvas.width = container.clientWidth;
+    canvas.height = container.clientHeight;
+    redrawCanvas();
+}
+
+async function loadRooms() {
+    try {
+        const response = await fetch('/api/rooms', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        const rooms = await response.json();
+        
+        const select = document.getElementById('roomSelect');
+        select.innerHTML = '<option value="">Seleziona una stanza</option>';
+        
+        rooms.forEach(room => {
+            const option = document.createElement('option');
+            option.value = room.id;
+            option.textContent = room.name;
+            select.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Errore caricamento stanze:', error);
+    }
+}
+
+function changeMode(mode) {
+    currentMode = mode;
+    canvas.style.cursor = mode === 'add' ? 'crosshair' : mode === 'delete' ? 'not-allowed' : 'default';
+}
+
+function updateZoom(value) {
+    zoom = parseFloat(value);
+    document.getElementById('zoomValue').textContent = Math.round(zoom * 100) + '%';
+    redrawCanvas();
+}
+
+function loadRoom(roomId) {
+    if (!roomId) return;
+    
+    fetch(`/api/rooms/${roomId}`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+    })
+        .then(response => response.json())
+        .then(room => {
+            currentRoom = room;
+            document.getElementById('roomTitle').textContent = room.name;
+            redrawCanvas();
+            updateStats();
+        });
+}
+
+function redrawCanvas() {
+    if (!ctx || !currentRoom) return;
+    
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.save();
+    ctx.scale(zoom, zoom);
+    
+    // Draw room outline
+    ctx.strokeStyle = '#333';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(10, 10, currentRoom.width * 50, currentRoom.height * 50);
+    
+    // Draw areas
+    if (currentRoom.areas) {
+        currentRoom.areas.forEach(area => {
+            ctx.fillStyle = area === selectedArea ? '#3B82F6' : '#10B981';
+            ctx.fillRect(
+                10 + area.x * 50,
+                10 + area.y * 50,
+                area.width * 50,
+                area.height * 50
+            );
+            
+            // Area label
+            ctx.fillStyle = 'white';
+            ctx.font = '12px Arial';
+            ctx.fillText(area.name, 15 + area.x * 50, 25 + area.y * 50);
+        });
+    }
+    
+    ctx.restore();
+}
+
+function handleMouseDown(event) {
+    const rect = canvas.getBoundingClientRect();
+    startX = (event.clientX - rect.left) / zoom;
+    startY = (event.clientY - rect.top) / zoom;
+    
+    if (currentMode === 'add') {
+        isDrawing = true;
+    } else if (currentMode === 'select') {
+        selectedArea = findAreaAt(startX, startY);
+        updateAreaProperties();
+        redrawCanvas();
+    } else if (currentMode === 'delete') {
+        const areaToDelete = findAreaAt(startX, startY);
+        if (areaToDelete) {
+            showDeleteAreaModal(areaToDelete);
+        }
+    }
+}
+
+function handleMouseMove(event) {
+    if (!isDrawing) return;
+    
+    const rect = canvas.getBoundingClientRect();
+    const currentX = (event.clientX - rect.left) / zoom;
+    const currentY = (event.clientY - rect.top) / zoom;
+    
+    redrawCanvas();
+    
+    // Draw preview rectangle
+    ctx.strokeStyle = '#3B82F6';
+    ctx.strokeRect(startX, startY, currentX - startX, currentY - startY);
+}
+
+async function handleMouseUp(event) {
+    if (!isDrawing) return;
+    
+    const rect = canvas.getBoundingClientRect();
+    const endX = (event.clientX - rect.left) / zoom;
+    const endY = (event.clientY - rect.top) / zoom;
+    
+    // Create new area
+    const newArea = {
+        room_id: currentRoom.id,
+        name: `Area ${(currentRoom.areas || []).length + 1}`,
+        x: (Math.min(startX, endX) - 10) / 50,
+        y: (Math.min(startY, endY) - 10) / 50,
+        width: Math.abs(endX - startX) / 50,
+        height: Math.abs(endY - startY) / 50,
+        max_capacity: 1
+    };
+    
+    try {
+        const response = await fetch('/api/areas', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(newArea)
+        });
+
+        if (response.ok) {
+            const createdArea = await response.json();
+            
+            // Add to local data
+            if (!currentRoom.areas) currentRoom.areas = [];
+            currentRoom.areas.push(createdArea);
+            
+            isDrawing = false;
+            redrawCanvas();
+            updateStats();
+            showToast('Area creata con successo', 'success');
+        } else {
+            const error = await response.json();
+            showToast('Errore: ' + (error.error || 'Errore sconosciuto'), 'error');
+        }
+    } catch (error) {
+        showToast('Errore di connessione', 'error');
+    }
+    
+    isDrawing = false;
+}
+
+function findAreaAt(x, y) {
+    if (!currentRoom.areas) return null;
+    
+    return currentRoom.areas.find(area => {
+        const areaX = 10 + area.x * 50;
+        const areaY = 10 + area.y * 50;
+        const areaWidth = area.width * 50;
+        const areaHeight = area.height * 50;
+        
+        return x >= areaX && x <= areaX + areaWidth && 
+               y >= areaY && y <= areaY + areaHeight;
+    });
+}
+
+function updateAreaProperties() {
+    if (!selectedArea) {
+        // Clear form if no area selected
+        document.getElementById('areaName').value = '';
+        document.getElementById('areaCapacity').value = '1';
+        document.getElementById('areaX').value = '0';
+        document.getElementById('areaY').value = '0';
+        document.getElementById('areaWidth').value = '1';
+        document.getElementById('areaHeight').value = '1';
+        return;
+    }
+    
+    document.getElementById('areaName').value = selectedArea.name || '';
+    document.getElementById('areaCapacity').value = selectedArea.max_capacity || 1;
+    document.getElementById('areaX').value = selectedArea.x || 0;
+    document.getElementById('areaY').value = selectedArea.y || 0;
+    document.getElementById('areaWidth').value = selectedArea.width || 1;
+    document.getElementById('areaHeight').value = selectedArea.height || 1;
+}
+
+async function updateSelectedArea() {
+    if (!selectedArea) {
+        showToast('Nessuna area selezionata', 'error');
+        return;
+    }
+    
+    const updatedArea = {
+        id: selectedArea.id,
+        room_id: currentRoom.id,
+        name: document.getElementById('areaName').value,
+        max_capacity: parseInt(document.getElementById('areaCapacity').value),
+        x: parseFloat(document.getElementById('areaX').value),
+        y: parseFloat(document.getElementById('areaY').value),
+        width: parseFloat(document.getElementById('areaWidth').value),
+        height: parseFloat(document.getElementById('areaHeight').value)
+    };
+
+    try {
+        const response = await fetch(`/api/areas/${selectedArea.id}`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(updatedArea)
+        });
+
+        if (response.ok) {
+            // Update local data
+            Object.assign(selectedArea, updatedArea);
+            redrawCanvas();
+            updateStats();
+            showToast('Area aggiornata con successo', 'success');
+        } else {
+            const error = await response.json();
+            showToast('Errore: ' + (error.error || 'Errore sconosciuto'), 'error');
+        }
+    } catch (error) {
+        showToast('Errore di connessione', 'error');
+    }
+}
+
+function updateStats() {
+    if (!currentRoom) return;
+    
+    const areas = currentRoom.areas || [];
+    document.getElementById('totalAreas').textContent = areas.length;
+    document.getElementById('occupiedAreas').textContent = areas.filter(a => a.hedgehogs && a.hedgehogs.length > 0).length;
+    document.getElementById('totalCapacity').textContent = areas.reduce((sum, a) => sum + a.max_capacity, 0);
+}
+
+
+
+function showToast(message, type) {
+    const colors = {
+        success: 'bg-green-500',
+        error: 'bg-red-500',
+        info: 'bg-blue-500'
+    };
+
+    const toast = document.createElement('div');
+    toast.className = `${colors[type]} text-white px-6 py-4 rounded-lg shadow-lg transform translate-x-full transition-transform duration-300 fixed top-4 right-4 z-50`;
+    toast.innerHTML = `
+        <div class="flex items-center space-x-3">
+            <span>${message}</span>
+            <button onclick="this.parentElement.parentElement.remove()" class="ml-4 text-white hover:text-gray-200">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `;
+
+    document.body.appendChild(toast);
+    setTimeout(() => toast.classList.remove('translate-x-full'), 100);
+    setTimeout(() => {
+        toast.classList.add('translate-x-full');
+        setTimeout(() => toast.remove(), 300);
+    }, 5000);
+}
+
+async function deleteArea(area) {
+    try {
+        const response = await fetch(`/api/areas/${area.id}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+
+        if (response.ok) {
+            // Remove from local data
+            const index = currentRoom.areas.indexOf(area);
+            if (index > -1) {
+                currentRoom.areas.splice(index, 1);
+            }
+            
+            // Clear selection if deleted area was selected
+            if (selectedArea === area) {
+                selectedArea = null;
+                updateAreaProperties();
+            }
+            
+            redrawCanvas();
+            updateStats();
+            showToast('Area eliminata con successo', 'success');
+        } else {
+            const error = await response.json();
+            showToast('Errore: ' + (error.error || 'Errore sconosciuto'), 'error');
+        }
+    } catch (error) {
+        showToast('Errore di connessione', 'error');
+    }
+}
+
+function showDeleteAreaModal(area) {
+    const modalHTML = `
+        <div class="space-y-6">
+            <h2 class="text-2xl font-bold text-red-600">⚠️ Elimina Area</h2>
+            
+            <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                <p class="text-red-800 font-medium">Sei sicuro di voler eliminare l'area "${area.name}"?</p>
+                <p class="text-red-600 text-sm mt-2">Questa azione non può essere annullata.</p>
+            </div>
+
+            <div class="bg-gray-50 rounded-lg p-4">
+                <h4 class="font-medium text-gray-800 mb-2">Dettagli area:</h4>
+                <ul class="text-sm text-gray-600 space-y-1">
+                    <li><strong>Nome:</strong> ${area.name}</li>
+                    <li><strong>Capacità:</strong> ${area.max_capacity}</li>
+                    <li><strong>Posizione:</strong> X: ${area.x}, Y: ${area.y}</li>
+                    <li><strong>Dimensioni:</strong> ${area.width} x ${area.height}</li>
+                </ul>
+            </div>
+
+            <div class="flex justify-end space-x-4 pt-4 border-t">
+                <button onclick="closeDeleteModal()"
+                        class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                    Annulla
+                </button>
+                <button onclick="confirmDeleteArea()"
+                        class="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700">
+                    <i class="fas fa-trash mr-2"></i>Elimina
+                </button>
+            </div>
+        </div>
+    `;
+    
+    window.areaToDelete = area;
+    
+    const modalContainer = document.createElement('div');
+    modalContainer.id = 'delete-modal';
+    modalContainer.className = 'fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4';
+    modalContainer.innerHTML = `
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full">
+            <div class="p-6">
+                ${modalHTML}
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modalContainer);
+}
+
+function closeDeleteModal() {
+    const modal = document.getElementById('delete-modal');
+    if (modal) {
+        modal.remove();
+    }
+    window.areaToDelete = null;
+}
+
+function confirmDeleteArea() {
+    if (window.areaToDelete) {
+        deleteArea(window.areaToDelete);
+        closeDeleteModal();
+    }
+}
+</script>
+</body>
+</html>

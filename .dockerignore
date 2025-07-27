@@ -1,0 +1,66 @@
+# 🦔 La Ninna - Docker Ignore
+
+# Git
+.git
+.gitignore
+
+# Documentation
+README.md
+SETUP_INSTRUCTIONS.md
+PROJECT_GUIDELINES.md
+*.md
+
+# Environment files
+.env
+.env.local
+.env.example
+
+# Database files
+*.db
+*.db-wal
+*.db-shm
+
+# Logs
+logs/
+*.log
+
+# Build artifacts
+bin/
+deploy/
+*.tar.gz
+
+# Test files
+*_test.go
+coverage.out
+coverage.html
+
+# Development tools
+.air.toml
+Makefile
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Node modules (if any)
+node_modules/
+
+# Backup files
+*~
+*.bak
+*.backup
+
+# Keep fonts and docs directories
+!fonts/
+!docs/

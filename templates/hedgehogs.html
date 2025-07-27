@@ -1,0 +1,1249 @@
+<!DOCTYPE html>
+<html lang="it" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🦔 Gestione Ricci - Centro La Ninna</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="/static/css/mobile.css" rel="stylesheet">
+    <link href="/static/css/desktop.css" rel="stylesheet">
+    <link href="/static/css/mobile-fixes.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'hedgehog-brown': '#8B4513',
+                        'hedgehog-tan': '#D2691E',
+                        'hedgehog-light': '#F4A460',
+                        'cozy-beige': '#F5F5DC'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="h-full bg-gradient-to-br from-cozy-beige via-green-50 to-blue-50">
+
+
+<!-- Mobile Header -->
+<div class="mobile-header">
+    <button id="mobile-menu-btn" class="touch-target focus-ring">
+        <i class="fas fa-bars text-hedgehog-brown"></i>
+    </button>
+    <div class="flex items-center space-x-2">
+        <div class="text-2xl">🦔</div>
+        <h1 class="text-lg font-bold text-hedgehog-brown">Ricci</h1>
+    </div>
+    <div class="w-10"></div>
+</div>
+
+<div class="min-h-screen bg-gradient-to-br from-cozy-beige via-green-50 to-blue-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="space-y-6">
+        <!-- Header -->
+        <div class="flex justify-between items-center">
+            <h1 class="text-3xl font-bold text-hedgehog-brown">🦔 Gestione Ricci</h1>
+            <div class="flex space-x-4">
+                <button onclick="openExportModal()"
+                        class="bg-amber-500 text-white px-4 py-2 rounded-lg hover:bg-amber-600">
+                    <i class="fas fa-download mr-2"></i>Esporta
+                </button>
+                <button onclick="openHedgehogForm()"
+                        class="bg-hedgehog-brown text-white px-6 py-3 rounded-full hover:bg-hedgehog-tan transition-all duration-300">
+                    <i class="fas fa-plus mr-2"></i>Nuovo Riccio
+                </button>
+            </div>
+        </div>
+
+        <!-- Filtri -->
+        <div class="card" style="border-radius: 0.75rem !important; background-color: white !important;">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <input type="text" id="searchFilter" placeholder="Cerca per nome..."
+                       class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown"
+                       oninput="filterHedgehogs()">
+                <select id="statusFilter" onchange="filterHedgehogs()"
+                        class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown">
+                    <option value="">Tutti gli stati</option>
+                    <option value="in_care">In cura</option>
+                    <option value="recovered">Recuperato</option>
+                    <option value="deceased">Deceduto</option>
+                    <option value="released">Rilasciato</option>
+                </select>
+                <select id="roomFilter" onchange="filterHedgehogs()"
+                        class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown">
+                    <option value="">Tutte le stanze</option>
+                </select>
+                <button onclick="resetFilters()"
+                        class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
+                    <i class="fas fa-times mr-2"></i>Reset
+                </button>
+            </div>
+        </div>
+
+        <!-- Lista Ricci -->
+        <div id="hedgehogs-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="col-span-full text-center py-12">
+                <div class="text-6xl mb-4">🦔</div>
+                <h3 class="text-xl font-bold text-gray-600 mb-2">Caricamento ricci...</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div id="main-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" style="border-radius: 1rem !important; background-color: white !important;">
+        <div class="flex justify-between items-center p-6 border-b border-gray-200">
+            <h2 class="text-2xl font-bold text-hedgehog-brown" id="modal-title">Modal</h2>
+            <button onclick="document.getElementById('main-modal').classList.add('hidden')"
+                    class="text-gray-400 hover:text-gray-600 text-2xl">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div id="modal-content" class="p-6"></div>
+    </div>
+    </div>
+</div>
+
+<script src="/static/js/mobile.js"></script>
+<script>
+// Check authentication
+if (!localStorage.getItem('token')) {
+    window.location.href = '/login';
+}
+
+let currentHedgehogs = [];
+
+// Load hedgehogs on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadHedgehogs();
+    loadRoomsForFilter();
+});
+
+async function loadHedgehogs() {
+    try {
+        const response = await fetch('/api/hedgehogs', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        
+        if (response.ok) {
+            currentHedgehogs = await response.json();
+            renderHedgehogs(currentHedgehogs);
+        } else {
+            showError('Errore nel caricamento dei ricci');
+        }
+    } catch (error) {
+        showError('Errore di connessione');
+    }
+}
+
+function renderHedgehogs(hedgehogs) {
+    const container = document.getElementById('hedgehogs-list');
+    
+    if (hedgehogs.length === 0) {
+        container.innerHTML = `
+            <div class="col-span-full text-center py-12">
+                <div class="text-6xl mb-4">🦔</div>
+                <h3 class="text-xl font-bold text-gray-600 mb-2">Nessun riccio trovato</h3>
+                <p class="text-gray-500">Aggiungi il primo riccio per iniziare</p>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = hedgehogs.map(hedgehog => `
+        <div class="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl hover:scale-105 transition-all duration-300 cursor-pointer" onclick="showHedgehogDetails(${hedgehog.id})">
+            <div class="flex justify-between items-start mb-4">
+                <h3 class="text-xl font-bold text-hedgehog-brown">${hedgehog.name}</h3>
+                <span class="px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(hedgehog.status)}">
+                    ${getStatusLabel(hedgehog.status)}
+                </span>
+            </div>
+            
+            <div class="space-y-2 text-sm text-gray-600">
+                <p><i class="fas fa-calendar mr-2"></i>Arrivo: ${formatDate(hedgehog.arrival_date)}</p>
+                ${hedgehog.area ? `<p><i class="fas fa-bed mr-2"></i>${hedgehog.area.room?.name || 'Stanza'} - ${hedgehog.area.name}</p>` : '<p><i class="fas fa-bed mr-2"></i>Nessuna area assegnata</p>'}
+                ${hedgehog.description ? `<p class="mt-3 text-gray-700">${hedgehog.description}</p>` : ''}
+            </div>
+            
+            <div class="flex justify-between items-center mt-4 pt-4 border-t">
+                <div class="flex space-x-2">
+                    <button onclick="event.stopPropagation(); editHedgehog(${hedgehog.id})" class="text-blue-600 hover:text-blue-800" title="Modifica">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button onclick="event.stopPropagation(); addWeightRecord(${hedgehog.id})" class="text-green-600 hover:text-green-800" title="Aggiungi pesata">
+                        <i class="fas fa-weight"></i>
+                    </button>
+                    <button onclick="event.stopPropagation(); addTherapy(${hedgehog.id})" class="text-purple-600 hover:text-purple-800" title="Aggiungi terapia">
+                        <i class="fas fa-pills"></i>
+                    </button>
+                </div>
+                <button onclick="event.stopPropagation(); deleteHedgehog(${hedgehog.id})" class="text-red-600 hover:text-red-800" title="Elimina">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function getStatusColor(status) {
+    switch(status) {
+        case 'in_care': return 'bg-blue-100 text-blue-800';
+        case 'recovered': return 'bg-green-100 text-green-800';
+        case 'deceased': return 'bg-red-100 text-red-800';
+        case 'released': return 'bg-amber-100 text-amber-800';
+        default: return 'bg-gray-100 text-gray-800';
+    }
+}
+
+function getStatusLabel(status) {
+    switch(status) {
+        case 'in_care': return 'In cura';
+        case 'recovered': return 'Recuperato';
+        case 'deceased': return 'Deceduto';
+        case 'released': return 'Rilasciato';
+        default: return status;
+    }
+}
+
+function formatDate(dateString) {
+    return new Date(dateString).toLocaleDateString('it-IT');
+}
+
+function filterHedgehogs() {
+    const searchTerm = document.getElementById('searchFilter').value.toLowerCase();
+    const statusFilter = document.getElementById('statusFilter').value;
+    const roomFilter = document.getElementById('roomFilter').value;
+    
+    const filtered = currentHedgehogs.filter(hedgehog => {
+        const matchesSearch = hedgehog.name.toLowerCase().includes(searchTerm);
+        const matchesStatus = !statusFilter || hedgehog.status === statusFilter;
+        const matchesRoom = !roomFilter || (hedgehog.area && hedgehog.area.room && hedgehog.area.room.id == roomFilter);
+        return matchesSearch && matchesStatus && matchesRoom;
+    });
+    
+    renderHedgehogs(filtered);
+}
+
+async function loadRoomsForFilter() {
+    try {
+        const response = await fetch('/api/rooms', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        const rooms = await response.json();
+        
+        const select = document.getElementById('roomFilter');
+        rooms.forEach(room => {
+            const option = document.createElement('option');
+            option.value = room.id;
+            option.textContent = room.name;
+            select.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Errore caricamento stanze per filtro:', error);
+    }
+}
+
+function resetFilters() {
+    document.getElementById('searchFilter').value = '';
+    document.getElementById('statusFilter').value = '';
+    document.getElementById('roomFilter').value = '';
+    renderHedgehogs(currentHedgehogs);
+}
+
+function openHedgehogForm() {
+    const formHTML = `
+        <div class="space-y-6">
+            <h2 class="text-2xl font-bold text-hedgehog-brown">🦔 Nuovo Riccio</h2>
+            
+            <form id="hedgehogForm" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-gray-700 font-bold mb-2">Nome *</label>
+                        <input type="text" id="name" name="name" required
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-bold mb-2">Stato</label>
+                        <select id="status" name="status"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown">
+                            <option value="in_care">In cura</option>
+                            <option value="recovered">Recuperato</option>
+                            <option value="deceased">Deceduto</option>
+                            <option value="released">Rilasciato</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-gray-700 font-bold mb-2">Descrizione</label>
+                    <textarea id="description" name="description" rows="3"
+                              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown"
+                              placeholder="Condizioni di salute, caratteristiche particolari..."></textarea>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-gray-700 font-bold mb-2">Data di Arrivo</label>
+                        <input type="date" id="arrival_date" name="arrival_date"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-bold mb-2">Area di Alloggio</label>
+                        <select id="area_id" name="area_id"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown">
+                            <option value="">Nessuna area assegnata</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div id="release_date_container" class="hidden">
+                    <div>
+                        <label class="block text-gray-700 font-bold mb-2">Data di Rilascio</label>
+                        <input type="date" id="release_date" name="release_date"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown">
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-4 pt-4 border-t">
+                    <button type="button" onclick="document.getElementById('main-modal').classList.add('hidden')"
+                            class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                        Annulla
+                    </button>
+                    <button type="submit"
+                            class="bg-hedgehog-brown text-white px-6 py-2 rounded-lg hover:bg-hedgehog-tan">
+                        <i class="fas fa-save mr-2"></i>Salva
+                    </button>
+                </div>
+            </form>
+        </div>
+    `;
+    
+    document.getElementById('modal-content').innerHTML = formHTML;
+    document.getElementById('main-modal').classList.remove('hidden');
+    
+    // Set default date
+    document.getElementById('arrival_date').value = new Date().toISOString().split('T')[0];
+    
+    // Load areas
+    loadAreasForForm();
+    
+    // Show/hide release date field based on status
+    document.getElementById('status').addEventListener('change', function() {
+        const releaseContainer = document.getElementById('release_date_container');
+        if (this.value === 'released') {
+            releaseContainer.classList.remove('hidden');
+            // Set default release date to today if not already set
+            if (!document.getElementById('release_date').value) {
+                document.getElementById('release_date').value = new Date().toISOString().split('T')[0];
+            }
+        } else {
+            releaseContainer.classList.add('hidden');
+        }
+    });
+    
+    // Handle form submission
+    document.getElementById('hedgehogForm').addEventListener('submit', handleHedgehogSubmit);
+}
+
+function openExportModal() {
+    const exportHTML = `
+        <div class="space-y-6">
+            <h2 class="text-2xl font-bold text-hedgehog-brown">📈 Esporta Dati</h2>
+            
+            <div>
+                <label class="block text-gray-700 font-bold mb-2">Formato</label>
+                <div class="grid grid-cols-3 gap-4">
+                    <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                        <input type="radio" name="format" value="pdf" checked class="mr-2">
+                        <i class="fas fa-file-pdf text-red-500 mr-2"></i>PDF
+                    </label>
+                    <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                        <input type="radio" name="format" value="excel" class="mr-2">
+                        <i class="fas fa-file-excel text-green-500 mr-2"></i>Excel
+                    </label>
+                    <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                        <input type="radio" name="format" value="csv" class="mr-2">
+                        <i class="fas fa-file-csv text-blue-500 mr-2"></i>CSV
+                    </label>
+                </div>
+            </div>
+
+            <div class="flex justify-end space-x-4 pt-4 border-t">
+                <button onclick="document.getElementById('main-modal').classList.add('hidden')"
+                        class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                    Annulla
+                </button>
+                <button onclick="startExport()"
+                        class="bg-hedgehog-brown text-white px-6 py-2 rounded-lg hover:bg-hedgehog-tan">
+                    <i class="fas fa-download mr-2"></i>Esporta
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('modal-content').innerHTML = exportHTML;
+    document.getElementById('main-modal').classList.remove('hidden');
+}
+
+async function startExport() {
+    const format = document.querySelector('input[name="format"]:checked').value;
+    
+    try {
+        const response = await fetch(`/api/export/hedgehogs/${format}`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        
+        if (response.ok) {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `hedgehogs.${format}`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            showToast('Export completato!', 'success');
+        } else {
+            showToast('Errore durante l\'export', 'error');
+        }
+    } catch (error) {
+        showToast('Errore di connessione', 'error');
+    }
+    
+    document.getElementById('main-modal').classList.add('hidden');
+}
+
+async function editHedgehog(id) {
+    try {
+        const response = await fetch(`/api/hedgehogs/${id}`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        const hedgehog = await response.json();
+
+        const formHTML = `
+            <div class="space-y-6">
+                <h2 class="text-2xl font-bold text-hedgehog-brown">🦔 Modifica Riccio</h2>
+                
+                <form id="hedgehogEditForm" class="space-y-4">
+                    <input type="hidden" id="hedgehog_id" value="${id}">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-gray-700 font-bold mb-2">Nome *</label>
+                            <input type="text" id="name" name="name" required value="${hedgehog.name}"
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown">
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 font-bold mb-2">Stato</label>
+                            <select id="status" name="status"
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown">
+                                <option value="in_care" ${hedgehog.status === 'in_care' ? 'selected' : ''}>In cura</option>
+                                <option value="recovered" ${hedgehog.status === 'recovered' ? 'selected' : ''}>Recuperato</option>
+                                <option value="deceased" ${hedgehog.status === 'deceased' ? 'selected' : ''}>Deceduto</option>
+                                <option value="released" ${hedgehog.status === 'released' ? 'selected' : ''}>Rilasciato</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-gray-700 font-bold mb-2">Descrizione</label>
+                        <textarea id="description" name="description" rows="3"
+                                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown"
+                                  placeholder="Condizioni di salute, caratteristiche particolari...">${hedgehog.description || ''}</textarea>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-gray-700 font-bold mb-2">Data di Arrivo</label>
+                            <input type="date" id="arrival_date" name="arrival_date" value="${hedgehog.arrival_date.split('T')[0]}"
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown">
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 font-bold mb-2">Area di Alloggio</label>
+                            <select id="area_id" name="area_id"
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown">
+                                <option value="">Nessuna area assegnata</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div id="edit_release_date_container" class="${hedgehog.status === 'released' ? '' : 'hidden'}">
+                        <div>
+                            <label class="block text-gray-700 font-bold mb-2">Data di Rilascio</label>
+                            <input type="date" id="release_date" name="release_date" value="${hedgehog.release_date ? hedgehog.release_date.split('T')[0] : ''}"
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown">
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end space-x-4 pt-4 border-t">
+                        <button type="button" onclick="document.getElementById('main-modal').classList.add('hidden')"
+                                class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                            Annulla
+                        </button>
+                        <button type="submit"
+                                class="bg-hedgehog-brown text-white px-6 py-2 rounded-lg hover:bg-hedgehog-tan">
+                            <i class="fas fa-save mr-2"></i>Aggiorna
+                        </button>
+                    </div>
+                </form>
+            </div>
+        `;
+        
+        document.getElementById('modal-content').innerHTML = formHTML;
+        document.getElementById('main-modal').classList.remove('hidden');
+        
+        // Load areas and set current selection
+        await loadAreasForEditForm(hedgehog.area_id);
+        
+        // Show/hide release date field based on status
+        document.getElementById('status').addEventListener('change', function() {
+            const releaseContainer = document.getElementById('edit_release_date_container');
+            if (this.value === 'released') {
+                releaseContainer.classList.remove('hidden');
+                // Set default release date to today if not already set
+                if (!document.getElementById('release_date').value) {
+                    document.getElementById('release_date').value = new Date().toISOString().split('T')[0];
+                }
+            } else {
+                releaseContainer.classList.add('hidden');
+            }
+        });
+        
+        // Handle form submission
+        document.getElementById('hedgehogEditForm').addEventListener('submit', handleHedgehogEdit);
+    } catch (error) {
+        showToast('Errore nel caricamento dei dati del riccio', 'error');
+    }
+}
+
+function addWeightRecord(id) {
+    const formHTML = `
+        <div class="space-y-6">
+            <h2 class="text-2xl font-bold text-hedgehog-brown">⚖️ Nuova Pesata</h2>
+            
+            <form id="weightForm" class="space-y-4">
+                <input type="hidden" id="hedgehog_id" name="hedgehog_id" value="${id}">
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-gray-700 font-bold mb-2">Peso (grammi) *</label>
+                        <input type="number" id="weight" name="weight" required min="1" step="0.1"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown"
+                               placeholder="es. 450">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-bold mb-2">Data Pesata</label>
+                        <input type="date" id="weight_date" name="weight_date"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-gray-700 font-bold mb-2">Note</label>
+                    <textarea id="notes" name="notes" rows="3"
+                              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown"
+                              placeholder="Note sulla pesata..."></textarea>
+                </div>
+
+                <div class="flex justify-end space-x-4 pt-4 border-t">
+                    <button type="button" onclick="document.getElementById('main-modal').classList.add('hidden')"
+                            class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                        Annulla
+                    </button>
+                    <button type="submit"
+                            class="bg-hedgehog-brown text-white px-6 py-2 rounded-lg hover:bg-hedgehog-tan">
+                        <i class="fas fa-save mr-2"></i>Salva
+                    </button>
+                </div>
+            </form>
+        </div>
+    `;
+    
+    document.getElementById('modal-content').innerHTML = formHTML;
+    document.getElementById('main-modal').classList.remove('hidden');
+    
+    // Set default date
+    document.getElementById('weight_date').value = new Date().toISOString().split('T')[0];
+    
+    // Handle form submission
+    document.getElementById('weightForm').addEventListener('submit', handleWeightSubmit);
+}
+
+function deleteHedgehog(id) {
+    showDeleteModal(
+        'Elimina Riccio',
+        'Questa azione non può essere annullata. Tutti i dati associati verranno eliminati.',
+        () => {
+            fetch(`/api/hedgehogs/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            })
+            .then(response => {
+                if (response.ok) {
+                    showToast('Riccio eliminato con successo', 'success');
+                    loadHedgehogs();
+                } else {
+                    showError('Errore nell\'eliminazione');
+                }
+            });
+        }
+    );
+}
+
+function showError(message) {
+    showToast(message, 'error');
+}
+
+async function loadAreasForForm() {
+    try {
+        const response = await fetch('/api/areas', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        const areas = await response.json();
+        
+        const select = document.getElementById('area_id');
+        areas.forEach(area => {
+            const option = document.createElement('option');
+            option.value = area.id;
+            option.textContent = `${area.room?.name || 'Stanza'} - ${area.name}`;
+            select.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Errore caricamento aree:', error);
+    }
+}
+
+async function handleHedgehogSubmit(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    const status = formData.get('status');
+    const data = {
+        name: formData.get('name'),
+        status: status,
+        description: formData.get('description'),
+        arrival_date: formData.get('arrival_date') + 'T00:00:00Z',
+        area_id: formData.get('area_id') ? parseInt(formData.get('area_id')) : null
+    };
+    
+    // Include release date if status is 'released'
+    if (status === 'released' && formData.get('release_date')) {
+        data.release_date = formData.get('release_date') + 'T00:00:00Z';
+    }
+
+    try {
+        const response = await fetch('/api/hedgehogs', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+
+        if (response.ok) {
+            document.getElementById('main-modal').classList.add('hidden');
+            showToast('Riccio aggiunto con successo', 'success');
+            loadHedgehogs();
+        } else {
+            const error = await response.json();
+            showToast('Errore: ' + (error.error || 'Errore sconosciuto'), 'error');
+        }
+    } catch (error) {
+        showToast('Errore di connessione', 'error');
+    }
+}
+
+async function loadAreasForEditForm(currentAreaId) {
+    try {
+        const response = await fetch('/api/areas', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        const areas = await response.json();
+        
+        const select = document.getElementById('area_id');
+        areas.forEach(area => {
+            const option = document.createElement('option');
+            option.value = area.id;
+            option.textContent = `${area.room?.name || 'Stanza'} - ${area.name}`;
+            if (area.id === currentAreaId) {
+                option.selected = true;
+            }
+            select.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Errore caricamento aree:', error);
+    }
+}
+
+async function handleHedgehogEdit(e) {
+    e.preventDefault();
+    
+    const hedgehogId = document.getElementById('hedgehog_id').value;
+    const formData = new FormData(e.target);
+    const status = formData.get('status');
+    const data = {
+        name: formData.get('name'),
+        status: status,
+        description: formData.get('description'),
+        arrival_date: formData.get('arrival_date') + 'T00:00:00Z',
+        area_id: formData.get('area_id') ? parseInt(formData.get('area_id')) : null
+    };
+    
+    // Include release date if status is 'released'
+    if (status === 'released' && formData.get('release_date')) {
+        data.release_date = formData.get('release_date') + 'T00:00:00Z';
+    }
+
+    try {
+        const response = await fetch(`/api/hedgehogs/${hedgehogId}`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+
+        if (response.ok) {
+            document.getElementById('main-modal').classList.add('hidden');
+            showToast('Riccio aggiornato con successo', 'success');
+            loadHedgehogs();
+        } else {
+            const error = await response.json();
+            showToast('Errore: ' + (error.error || 'Errore sconosciuto'), 'error');
+        }
+    } catch (error) {
+        showToast('Errore di connessione', 'error');
+    }
+}
+
+function addTherapy(id) {
+    const formHTML = `
+        <div class="space-y-6">
+            <h2 class="text-2xl font-bold text-hedgehog-brown">💊 Nuova Terapia</h2>
+            
+            <form id="therapyForm" class="space-y-4">
+                <input type="hidden" id="hedgehog_id" name="hedgehog_id" value="${id}">
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-gray-700 font-bold mb-2">Nome Terapia *</label>
+                        <input type="text" id="therapy_name" name="therapy_name" required
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown"
+                               placeholder="es. Antibiotico">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-bold mb-2">Dosaggio</label>
+                        <input type="text" id="dosage" name="dosage"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown"
+                               placeholder="es. 0.5ml">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-gray-700 font-bold mb-2">Data Inizio</label>
+                        <input type="date" id="start_date" name="start_date"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-bold mb-2">Data Fine</label>
+                        <input type="date" id="end_date" name="end_date"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-gray-700 font-bold mb-2">Frequenza</label>
+                    <select id="frequency" name="frequency"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown">
+                        <option value="daily">Giornaliera</option>
+                        <option value="twice_daily">Due volte al giorno</option>
+                        <option value="weekly">Settimanale</option>
+                        <option value="as_needed">Al bisogno</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-gray-700 font-bold mb-2">Note</label>
+                    <textarea id="therapy_notes" name="therapy_notes" rows="3"
+                              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown"
+                              placeholder="Note sulla terapia..."></textarea>
+                </div>
+
+                <div class="flex justify-end space-x-4 pt-4 border-t">
+                    <button type="button" onclick="document.getElementById('main-modal').classList.add('hidden')"
+                            class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                        Annulla
+                    </button>
+                    <button type="submit"
+                            class="bg-hedgehog-brown text-white px-6 py-2 rounded-lg hover:bg-hedgehog-tan">
+                        <i class="fas fa-save mr-2"></i>Salva
+                    </button>
+                </div>
+            </form>
+        </div>
+    `;
+    
+    document.getElementById('modal-content').innerHTML = formHTML;
+    document.getElementById('main-modal').classList.remove('hidden');
+    
+    // Set default dates
+    document.getElementById('start_date').value = new Date().toISOString().split('T')[0];
+    
+    // Handle form submission
+    document.getElementById('therapyForm').addEventListener('submit', handleTherapySubmit);
+}
+
+async function handleWeightSubmit(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    const hedgehogId = parseInt(formData.get('hedgehog_id'));
+    if (!hedgehogId || isNaN(hedgehogId)) {
+        showToast('Seleziona un riccio', 'error');
+        return;
+    }
+    
+    const data = {
+        hedgehog_id: hedgehogId,
+        weight: parseFloat(formData.get('weight')),
+        date: formData.get('weight_date') + 'T00:00:00Z',
+        notes: formData.get('notes') || ''
+    };
+
+    try {
+        const response = await fetch('/api/weight-records', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+
+        if (response.ok) {
+            document.getElementById('main-modal').classList.add('hidden');
+            showToast('Pesata registrata con successo', 'success');
+            // Refresh hedgehog list to show updated data
+            loadHedgehogs();
+        } else {
+            const error = await response.json();
+            showToast('Errore: ' + (error.error || 'Errore sconosciuto'), 'error');
+        }
+    } catch (error) {
+        showToast('Errore di connessione', 'error');
+    }
+}
+
+async function handleTherapySubmit(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    const hedgehogId = parseInt(formData.get('hedgehog_id'));
+    if (!hedgehogId || isNaN(hedgehogId)) {
+        showToast('Seleziona un riccio', 'error');
+        return;
+    }
+    
+    const data = {
+        hedgehog_id: hedgehogId,
+        name: formData.get('therapy_name'),
+        description: formData.get('dosage') || '', // Using description field for dosage
+        start_date: formData.get('start_date') + 'T00:00:00Z',
+        end_date: formData.get('end_date') ? formData.get('end_date') + 'T00:00:00Z' : null,
+        status: 'active'
+    };
+
+    try {
+        const response = await fetch('/api/therapies', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+
+        if (response.ok) {
+            document.getElementById('main-modal').classList.add('hidden');
+            showToast('Terapia aggiunta con successo', 'success');
+            // Refresh hedgehog list to show updated data
+            loadHedgehogs();
+        } else {
+            const error = await response.json();
+            showToast('Errore: ' + (error.error || 'Errore sconosciuto'), 'error');
+        }
+    } catch (error) {
+        showToast('Errore di connessione', 'error');
+    }
+}
+
+async function showHedgehogDetails(id) {
+    try {
+        const response = await fetch(`/api/hedgehogs/${id}`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        const hedgehog = await response.json();
+
+        const modalHTML = `
+            <div class="space-y-6">
+                <div class="flex items-center space-x-3">
+                    <div class="text-4xl">🦔</div>
+                    <div>
+                        <h2 class="text-2xl font-bold text-hedgehog-brown">${hedgehog.name}</h2>
+                        <span class="px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(hedgehog.status)}">
+                            ${getStatusLabel(hedgehog.status)}
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <h3 class="font-bold text-gray-800 mb-3">Informazioni Generali</h3>
+                        <div class="space-y-2 text-sm">
+                            <p><strong>Data Arrivo:</strong> ${formatDate(hedgehog.arrival_date)}</p>
+                            ${hedgehog.status === 'released' && hedgehog.release_date ? `<p><strong>Data Rilascio:</strong> ${formatDate(hedgehog.release_date)}</p>` : ''}
+                            <p><strong>Area:</strong> ${hedgehog.area ? `${hedgehog.area.room?.name || 'Stanza'} - ${hedgehog.area.name}` : 'Nessuna area assegnata'}</p>
+                            ${hedgehog.description ? `<p><strong>Descrizione:</strong> ${hedgehog.description}</p>` : ''}
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <h3 class="font-bold text-gray-800 mb-3">Statistiche</h3>
+                        <div class="space-y-2 text-sm">
+                            <p><strong>Pesate:</strong> <span id="weight-count">-</span></p>
+                            <p><strong>Terapie:</strong> <span id="therapy-count">-</span></p>
+                            <p><strong>Ultimo Peso:</strong> <span id="last-weight">-</span></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabs -->
+                <div class="border-b border-gray-200">
+                    <nav class="-mb-px flex space-x-8">
+                        <button onclick="showTab('weights')" id="weights-tab" class="py-2 px-1 border-b-2 border-hedgehog-brown text-hedgehog-brown font-medium text-sm">
+                            Pesate
+                        </button>
+                        <button onclick="showTab('therapies')" id="therapies-tab" class="py-2 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium text-sm">
+                            Terapie
+                        </button>
+                    </nav>
+                </div>
+
+                <!-- Tab Content -->
+                <div id="weights-content" class="tab-content">
+                    <!-- Weight Chart -->
+                    <div class="mb-6">
+                        <h3 class="font-bold text-gray-800 mb-3">Andamento Peso</h3>
+                        <div class="bg-white border rounded-lg p-4">
+                            <canvas id="weight-chart" height="200"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-gray-800">Pesate Recenti</h3>
+                        <button onclick="event.stopPropagation(); addWeightRecord(${id})" class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700">
+                            <i class="fas fa-plus mr-1"></i>Aggiungi
+                        </button>
+                    </div>
+                    <div id="weights-list" class="space-y-2 max-h-60 overflow-y-auto">
+                        <div class="text-center py-4 text-gray-500">Caricamento...</div>
+                    </div>
+                    <div id="weights-pagination" class="flex justify-center mt-4"></div>
+                </div>
+
+                <div id="therapies-content" class="tab-content hidden">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-gray-800">Terapie</h3>
+                        <button onclick="event.stopPropagation(); addTherapy(${id})" class="bg-purple-600 text-white px-3 py-1 rounded text-sm hover:bg-purple-700">
+                            <i class="fas fa-plus mr-1"></i>Aggiungi
+                        </button>
+                    </div>
+                    <div id="therapies-list" class="space-y-2 max-h-60 overflow-y-auto">
+                        <div class="text-center py-4 text-gray-500">Caricamento...</div>
+                    </div>
+                    <div id="therapies-pagination" class="flex justify-center mt-4"></div>
+                </div>
+
+                <div class="flex justify-end pt-4 border-t">
+                    <button onclick="document.getElementById('main-modal').classList.add('hidden')"
+                            class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                        Chiudi
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        document.getElementById('modal-content').innerHTML = modalHTML;
+        document.getElementById('main-modal').classList.remove('hidden');
+        
+        // Load weights and therapies from hedgehog data
+        displayWeights(hedgehog.weight_records || []);
+        displayTherapies(hedgehog.therapies || []);
+        
+    } catch (error) {
+        showToast('Errore nel caricamento dei dettagli', 'error');
+    }
+}
+
+function showTab(tab) {
+    // Hide all tabs
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+    document.querySelectorAll('[id$="-tab"]').forEach(el => {
+        el.classList.remove('border-hedgehog-brown', 'text-hedgehog-brown');
+        el.classList.add('border-transparent', 'text-gray-500');
+    });
+    
+    // Show selected tab
+    document.getElementById(`${tab}-content`).classList.remove('hidden');
+    document.getElementById(`${tab}-tab`).classList.add('border-hedgehog-brown', 'text-hedgehog-brown');
+    document.getElementById(`${tab}-tab`).classList.remove('border-transparent', 'text-gray-500');
+}
+
+/**
+ * Global variable to store the weight chart instance
+ * This allows us to properly destroy and recreate the chart when needed
+ * to prevent memory leaks and duplicate charts
+ */
+let weightChart = null;
+
+/**
+ * Displays weight records in the hedgehog detail modal
+ * Renders both the weight chart and the list of individual weight records
+ * @param {Array} weights - Array of weight record objects
+ */
+function displayWeights(weights) {
+    const container = document.getElementById('weights-list');
+    if (!weights || weights.length === 0) {
+        container.innerHTML = '<div class="text-center py-4 text-gray-500">Nessuna pesata registrata</div>';
+        document.getElementById('weight-count').textContent = '0';
+        document.getElementById('last-weight').textContent = '-';
+        
+        // Display empty chart message
+        const chartCanvas = document.getElementById('weight-chart');
+        const ctx = chartCanvas.getContext('2d');
+        ctx.clearRect(0, 0, chartCanvas.width, chartCanvas.height);
+        ctx.font = '14px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#6B7280';
+        ctx.fillText('Nessun dato disponibile per il grafico', chartCanvas.width / 2, chartCanvas.height / 2);
+        
+        return;
+    }
+    
+    // Sort by date ascending for the chart (oldest to newest)
+    const chronologicalWeights = [...weights].sort((a, b) => new Date(a.date) - new Date(b.date));
+    
+    // Sort by date descending for the list (newest to oldest)
+    const sortedWeights = [...weights].sort((a, b) => new Date(b.date) - new Date(a.date));
+    
+    document.getElementById('weight-count').textContent = weights.length;
+    document.getElementById('last-weight').textContent = `${sortedWeights[0].weight}g (${formatDate(sortedWeights[0].date)})`;
+    
+    // Render the weight chart
+    renderWeightChart(chronologicalWeights);
+    
+    // Render the weight list
+    container.innerHTML = sortedWeights.map(weight => `
+        <div class="bg-white border rounded-lg p-3">
+            <div class="flex justify-between items-center">
+                <div>
+                    <span class="font-medium text-lg">${weight.weight}g</span>
+                    <span class="text-gray-500 text-sm ml-2">${formatDate(weight.date)}</span>
+                </div>
+            </div>
+            ${weight.notes ? `<p class="text-gray-600 text-sm mt-1">${weight.notes}</p>` : ''}
+        </div>
+    `).join('');
+}
+
+/**
+ * Renders a stacked bar chart showing weight changes over time
+ * The chart visualizes:
+ * - Base weight (gray)
+ * - Weight gains (green)
+ * - Weight losses (red)
+ * 
+ * This stacked representation makes it easy to see weight trends and fluctuations,
+ * which is important for monitoring hedgehog health.
+ * 
+ * @param {Array} weights - Array of weight record objects sorted chronologically
+ */
+function renderWeightChart(weights) {
+    // Get the canvas element
+    const ctx = document.getElementById('weight-chart').getContext('2d');
+    
+    // Process data for the chart
+    // Extract dates and weight values for display
+    const dates = weights.map(w => formatDate(w.date));
+    const weightValues = weights.map(w => w.weight);
+    
+    // Calculate weight changes for stacked bars
+    // For each weight record, we need to determine:
+    // 1. The base weight (what to start the bar at)
+    // 2. Any weight gain since the last measurement (positive change)
+    // 3. Any weight loss since the last measurement (negative change)
+    const weightChanges = [];
+    let previousWeight = 0;
+    
+    weights.forEach((weight, index) => {
+        if (index === 0) {
+            // Special case: First weight measurement
+            // We treat the entire first weight as a "gain" from zero
+            weightChanges.push({
+                base: 0,          // Start at zero
+                gain: weight.weight, // The entire weight is shown as gain
+                loss: 0           // No loss for first measurement
+            });
+            previousWeight = weight.weight;
+        } else {
+            // Calculate change from previous measurement
+            const change = weight.weight - previousWeight;
+            
+            if (change >= 0) {
+                // Weight gain or no change
+                // The bar starts at the previous weight and adds the gain on top
+                weightChanges.push({
+                    base: previousWeight, // Start at previous weight
+                    gain: change,         // Show the gain
+                    loss: 0               // No loss
+                });
+            } else {
+                // Weight loss
+                // The bar starts at the current weight and adds the loss on top
+                // This creates the visual effect of the loss being "stacked" on top
+                weightChanges.push({
+                    base: weight.weight,  // Start at current weight
+                    gain: 0,              // No gain
+                    loss: Math.abs(change) // Show the loss as positive value
+                });
+            }
+            previousWeight = weight.weight;
+        }
+    });
+    
+    // Extract data for the chart
+    const baseValues = weightChanges.map(w => w.base);
+    const gainValues = weightChanges.map(w => w.gain);
+    const lossValues = weightChanges.map(w => w.loss);
+    
+    // Destroy previous chart if it exists
+    if (weightChart) {
+        weightChart.destroy();
+    }
+    
+    // Create the chart
+    weightChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: dates,
+            datasets: [
+                {
+                    label: 'Peso Base',
+                    data: baseValues,
+                    backgroundColor: 'rgba(75, 85, 99, 0.7)',
+                    borderColor: 'rgba(75, 85, 99, 1)',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Aumento',
+                    data: gainValues,
+                    backgroundColor: 'rgba(16, 185, 129, 0.7)',
+                    borderColor: 'rgba(16, 185, 129, 1)',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Perdita',
+                    data: lossValues,
+                    backgroundColor: 'rgba(239, 68, 68, 0.7)',
+                    borderColor: 'rgba(239, 68, 68, 1)',
+                    borderWidth: 1
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Andamento del Peso (grammi)',
+                    font: {
+                        size: 16
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        afterTitle: function(tooltipItems) {
+                            const index = tooltipItems[0].dataIndex;
+                            return `Peso totale: ${weightValues[index]}g`;
+                        }
+                    }
+                },
+                legend: {
+                    position: 'bottom'
+                }
+            },
+            scales: {
+                x: {
+                    stacked: true,
+                    title: {
+                        display: true,
+                        text: 'Data'
+                    }
+                },
+                y: {
+                    stacked: true,
+                    title: {
+                        display: true,
+                        text: 'Peso (g)'
+                    },
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+
+function displayTherapies(therapies) {
+    const container = document.getElementById('therapies-list');
+    if (!therapies || therapies.length === 0) {
+        container.innerHTML = '<div class="text-center py-4 text-gray-500">Nessuna terapia registrata</div>';
+        document.getElementById('therapy-count').textContent = '0';
+        return;
+    }
+    
+    document.getElementById('therapy-count').textContent = therapies.length;
+    
+    container.innerHTML = therapies.map(therapy => `
+        <div class="bg-white border rounded-lg p-3">
+            <div class="flex justify-between items-center">
+                <div>
+                    <span class="font-medium">${therapy.name}</span>
+                    ${therapy.description ? `<span class="text-gray-500 text-sm ml-2">${therapy.description}</span>` : ''}
+                </div>
+                <span class="text-xs px-2 py-1 bg-gray-100 rounded">${therapy.status || 'active'}</span>
+            </div>
+            <div class="text-gray-600 text-sm mt-1">
+                <span>Inizio: ${formatDate(therapy.start_date)}</span>
+                ${therapy.end_date ? ` - Fine: ${formatDate(therapy.end_date)}` : ''}
+            </div>
+        </div>
+    `).join('');
+}
+
+function logout() {
+    localStorage.removeItem('token');
+    window.location.href = '/login';
+}
+</script>
+</body>
+</html>
