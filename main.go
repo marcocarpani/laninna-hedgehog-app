@@ -60,8 +60,18 @@ func main() {
 		logger.Fatal("Failed to connect to database", err)
 	}
 
+	// Initialize Cloudinary service
+	cloudinaryService, err := NewCloudinaryService()
+	if err != nil {
+		logger.Warn("Failed to initialize Cloudinary service", logger.Err(err))
+		logger.Info("Continuing without Cloudinary integration - image uploads will not work")
+		cloudinaryService = nil
+	} else {
+		logger.Info("Cloudinary service initialized successfully")
+	}
+
 	// Inizializza router
-	r := setupRouter(db)
+	r := setupRouter(db, cloudinaryService)
 
 	// Avvia sistema notifiche
 	StartNotificationScheduler(db)
@@ -106,7 +116,7 @@ func initDB() (*gorm.DB, error) {
 	return db, nil
 }
 
-func setupRouter(db *gorm.DB) *gin.Engine {
+func setupRouter(db *gorm.DB, cloudinaryService *CloudinaryService) *gin.Engine {
 	// Use gin.New() instead of gin.Default() to avoid using the default logger
 	r := gin.New()
 	
@@ -143,12 +153,17 @@ func setupRouter(db *gorm.DB) *gin.Engine {
 		protected := api.Group("/")
 		protected.Use(authMiddleware())
 		{
-			// Hedgehogs CRUD
+ 		// Hedgehogs CRUD
 			protected.GET("/hedgehogs", getHedgehogs(db))
 			protected.POST("/hedgehogs", createHedgehog(db))
 			protected.GET("/hedgehogs/:id", getHedgehog(db))
 			protected.PUT("/hedgehogs/:id", updateHedgehog(db))
 			protected.DELETE("/hedgehogs/:id", deleteHedgehog(db))
+			
+			// Hedgehog image upload (only if Cloudinary is configured)
+			if cloudinaryService != nil {
+				protected.POST("/hedgehogs/:id/image", UploadHedgehogImageHandler(db, cloudinaryService))
+			}
 
 			// Rooms CRUD
 			protected.GET("/rooms", getRooms(db))

@@ -25,6 +25,20 @@
                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown"
                       placeholder="Condizioni di salute, caratteristiche particolari..."></textarea>
         </div>
+        
+        <div>
+            <label class="block text-gray-700 font-bold mb-2">Immagine</label>
+            <div class="flex items-center space-x-4">
+                <div id="imagePreviewContainer" class="hidden">
+                    <img id="imagePreview" class="h-24 w-24 object-cover rounded-lg border border-gray-300" src="" alt="Anteprima immagine">
+                </div>
+                <div class="flex-1">
+                    <input type="file" id="imageUpload" name="imageUpload" accept="image/jpeg,image/png,image/gif"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown">
+                    <p class="text-sm text-gray-500 mt-1">Formati supportati: JPEG, PNG, GIF</p>
+                </div>
+            </div>
+        </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -73,6 +87,22 @@ fetch('/api/areas', {
 // Set default date
 document.getElementById('arrival_date').value = new Date().toISOString().split('T')[0];
 
+// Handle image preview
+document.getElementById('imageUpload').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const preview = document.getElementById('imagePreview');
+            preview.src = e.target.result;
+            document.getElementById('imagePreviewContainer').classList.remove('hidden');
+        }
+        reader.readAsDataURL(file);
+    } else {
+        document.getElementById('imagePreviewContainer').classList.add('hidden');
+    }
+});
+
 // Handle form submission
 document.getElementById('hedgehogForm').addEventListener('submit', async function(e) {
     e.preventDefault();
@@ -87,6 +117,7 @@ document.getElementById('hedgehogForm').addEventListener('submit', async functio
     };
 
     try {
+        // First, create the hedgehog
         const response = await fetch('/api/hedgehogs', {
             method: 'POST',
             headers: {
@@ -97,6 +128,15 @@ document.getElementById('hedgehogForm').addEventListener('submit', async functio
         });
 
         if (response.ok) {
+            const hedgehog = await response.json();
+            
+            // Check if there's an image to upload
+            const imageFile = document.getElementById('imageUpload').files[0];
+            if (imageFile) {
+                // Upload the image
+                await uploadHedgehogImage(hedgehog.id, imageFile);
+            }
+            
             document.getElementById('main-modal').classList.add('hidden');
             showToast('Riccio aggiunto con successo', 'success');
             window.location.href = '/hedgehogs';
@@ -108,4 +148,35 @@ document.getElementById('hedgehogForm').addEventListener('submit', async functio
         showToast('Errore di connessione', 'error');
     }
 });
+
+// Function to upload hedgehog image
+async function uploadHedgehogImage(hedgehogId, file) {
+    try {
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        const response = await fetch(`/api/hedgehogs/${hedgehogId}/image`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: formData
+        });
+        
+        // Parse the response regardless of status to help with debugging
+        const result = await response.json();
+        console.log('Image upload response:', result);
+        
+        if (response.ok) {
+            // Log the image URL for debugging
+            console.log('Image URL from response:', result.image_url);
+            showToast('Immagine caricata con successo', 'success');
+        } else {
+            showToast('Errore caricamento immagine: ' + (result.error || 'Errore sconosciuto'), 'warning');
+        }
+    } catch (error) {
+        console.error('Error uploading image:', error);
+        showToast('Errore caricamento immagine', 'warning');
+    }
+}
 </script>

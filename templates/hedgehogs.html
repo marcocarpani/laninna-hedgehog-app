@@ -163,10 +163,17 @@ function renderHedgehogs(hedgehogs) {
                 </span>
             </div>
             
-            <div class="space-y-2 text-sm text-gray-600">
-                <p><i class="fas fa-calendar mr-2"></i>Arrivo: ${formatDate(hedgehog.arrival_date)}</p>
-                ${hedgehog.area ? `<p><i class="fas fa-bed mr-2"></i>${hedgehog.area.room?.name || 'Stanza'} - ${hedgehog.area.name}</p>` : '<p><i class="fas fa-bed mr-2"></i>Nessuna area assegnata</p>'}
-                ${hedgehog.description ? `<p class="mt-3 text-gray-700">${hedgehog.description}</p>` : ''}
+            <div class="flex items-start space-x-4">
+                <div class="flex-shrink-0">
+                    <img src="${hedgehog.picture || 'https://res.cloudinary.com/dbzxfdul3/image/upload/v1753739516/cute-hedgehog-cartoon-porcupine-illustration_1058532-11530_kxu4lt.jpg'}"
+                         alt="${hedgehog.name}" 
+                         class="w-24 h-24 object-cover rounded-lg border border-gray-200">
+                </div>
+                <div class="space-y-2 text-sm text-gray-600 flex-1">
+                    <p><i class="fas fa-calendar mr-2"></i>Arrivo: ${formatDate(hedgehog.arrival_date)}</p>
+                    ${hedgehog.area ? `<p><i class="fas fa-bed mr-2"></i>${hedgehog.area.room?.name || 'Stanza'} - ${hedgehog.area.name}</p>` : '<p><i class="fas fa-bed mr-2"></i>Nessuna area assegnata</p>'}
+                    ${hedgehog.description ? `<p class="mt-3 text-gray-700">${hedgehog.description}</p>` : ''}
+                </div>
             </div>
             
             <div class="flex justify-between items-center mt-4 pt-4 border-t">
@@ -896,7 +903,19 @@ async function showHedgehogDetails(id) {
         const modalHTML = `
             <div class="space-y-6">
                 <div class="flex items-center space-x-3">
-                    <div class="text-4xl">🦔</div>
+                    <div class="relative group">
+                        <img src="${hedgehog.picture || 'https://res.cloudinary.com/dbzxfdul3/image/upload/v1753739516/cute-hedgehog-cartoon-porcupine-illustration_1058532-11530_kxu4lt.jpg'}"
+                             alt="${hedgehog.name}" 
+                             class="w-24 h-24 object-cover rounded-lg border border-gray-200">
+                        <button onclick="event.stopPropagation(); document.getElementById('imageUploadInput-${hedgehog.id}').click();" 
+                                class="absolute bottom-0 right-0 bg-hedgehog-brown text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                            <i class="fas fa-camera"></i>
+                        </button>
+                        <input type="file" id="imageUploadInput-${hedgehog.id}" 
+                               accept="image/jpeg,image/png,image/gif" 
+                               class="hidden" 
+                               onchange="uploadHedgehogImage(${hedgehog.id}, this.files[0])">
+                    </div>
                     <div>
                         <h2 class="text-2xl font-bold text-hedgehog-brown">${hedgehog.name}</h2>
                         <span class="px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(hedgehog.status)}">
@@ -1238,6 +1257,72 @@ function displayTherapies(therapies) {
             </div>
         </div>
     `).join('');
+}
+
+/**
+ * Uploads an image for a hedgehog
+ * @param {number} hedgehogId - The ID of the hedgehog
+ * @param {File} file - The image file to upload
+ */
+async function uploadHedgehogImage(hedgehogId, file) {
+    if (!file) {
+        showToast('Nessun file selezionato', 'error');
+        return;
+    }
+    
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
+    if (!validTypes.includes(file.type)) {
+        showToast('Formato file non supportato. Usa JPEG, PNG o GIF', 'error');
+        return;
+    }
+    
+    // Show loading indicator
+    showToast('Caricamento immagine in corso...', 'info');
+    
+    try {
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        const response = await fetch(`/api/hedgehogs/${hedgehogId}/image`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: formData
+        });
+        
+        // Parse the response regardless of status to help with debugging
+        const result = await response.json();
+        console.log('Image upload response:', result);
+        
+        if (response.ok) {
+            // Log the image URL for debugging
+            console.log('Image URL from response:', result.image_url);
+            showToast('Immagine caricata con successo', 'success');
+            
+            // Update the image in the UI
+            const imageUrl = result.image_url;
+            console.log('Using image URL for UI update:', imageUrl);
+            
+            // Update in the modal
+            const modalImage = document.querySelector(`#imageUploadInput-${hedgehogId}`).closest('.relative').querySelector('img');
+            if (modalImage) {
+                modalImage.src = imageUrl;
+                console.log('Updated modal image src to:', imageUrl);
+            } else {
+                console.log('Modal image element not found');
+            }
+            
+            // Refresh the hedgehogs list to update the card view
+            loadHedgehogs();
+        } else {
+            showToast('Errore: ' + (result.error || 'Errore sconosciuto'), 'error');
+        }
+    } catch (error) {
+        console.error('Error uploading image:', error);
+        showToast('Errore di connessione', 'error');
+    }
 }
 
 function logout() {

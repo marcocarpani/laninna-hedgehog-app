@@ -691,11 +691,11 @@ function showDeleteModal(title, message, onConfirm) {
                 </div>
             </div>
             <div class="flex justify-end space-x-3 mt-6">
-                <button onclick="this.closest('.fixed').remove()" 
+                <button id="cancel-delete" 
                         class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                     Annulla
                 </button>
-                <button onclick="this.closest('.fixed').remove(); (${onConfirm.toString()})()"
+                <button id="confirm-delete"
                         class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
                     <i class="fas fa-trash mr-2"></i>Elimina
                 </button>
@@ -703,4 +703,14 @@ function showDeleteModal(title, message, onConfirm) {
         </div>
     `;
     document.body.appendChild(modal);
+    
+    // Add event listeners using proper closure
+    document.getElementById('cancel-delete').addEventListener('click', function() {
+        modal.remove();
+    });
+    
+    document.getElementById('confirm-delete').addEventListener('click', function() {
+        modal.remove();
+        onConfirm(); // This preserves the closure context
+    });
 }

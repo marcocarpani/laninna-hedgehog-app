@@ -168,10 +168,20 @@ func updateHedgehog(db *gorm.DB) gin.HandlerFunc {
 func deleteHedgehog(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.Param("id")
-		if err := db.Delete(&Hedgehog{}, id).Error; err != nil {
+		
+		// First check if the hedgehog exists
+		var hedgehog Hedgehog
+		if err := db.First(&hedgehog, id).Error; err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Hedgehog not found"})
+			return
+		}
+		
+		// If hedgehog exists, proceed with deletion
+		if err := db.Delete(&hedgehog).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
+		
 		c.JSON(http.StatusOK, gin.H{"message": "Hedgehog deleted"})
 	}
 }
