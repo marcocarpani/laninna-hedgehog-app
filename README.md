@@ -256,6 +256,11 @@ go test -run TestHedgehogHandler
 
 ## 🚀 Deployment
 
+### Render.com Deployment
+The application includes a `render.yaml` blueprint for easy deployment to Render.com.
+
+For detailed instructions, see the [Render Deployment Guide](render_deployment.md).
+
 ### Production Build
 ```bash
 # Build binary

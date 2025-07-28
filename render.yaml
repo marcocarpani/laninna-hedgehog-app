@@ -40,6 +40,19 @@ services:
         value: 100
       - key: FONTS_PATH
         value: ./fonts
+      # Cloudinary configuration (optional - for image uploads)
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+        # Set this via the Render dashboard or CLI
+        # render secret set CLOUDINARY_CLOUD_NAME --value "your-cloud-name"
+      - key: CLOUDINARY_API_KEY
+        sync: false
+        # Set this via the Render dashboard or CLI
+        # render secret set CLOUDINARY_API_KEY --value "your-api-key"
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+        # Set this via the Render dashboard or CLI
+        # render secret set CLOUDINARY_API_SECRET --value "your-api-secret"
 
     disk:
       name: laninna-data
