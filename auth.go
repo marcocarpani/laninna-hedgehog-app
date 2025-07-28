@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/laninna/hedgehog-app/logger"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 	"net/http"
@@ -40,28 +41,63 @@ type TokenResponse struct {
 // @Router /login [post]
 func loginHandler(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		// Get request-scoped logger from context
+		log := logger.GetLoggerFromContext(c)
+		
 		var req LoginRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
+			log.Warn().
+				Err(err).
+				Str("client_ip", c.ClientIP()).
+				Msg("Invalid login request format")
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
+		// Log login attempt (without password)
+		log.Debug().
+			Str("username", req.Username).
+			Str("client_ip", c.ClientIP()).
+			Msg("Login attempt")
+
 		var user User
 		if err := db.Where("username = ?", req.Username).First(&user).Error; err != nil {
+			log.Warn().
+				Err(err).
+				Str("username", req.Username).
+				Str("client_ip", c.ClientIP()).
+				Msg("Login failed: user not found")
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
 			return
 		}
 
 		if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
+			log.Warn().
+				Err(err).
+				Str("username", req.Username).
+				Str("client_ip", c.ClientIP()).
+				Msg("Login failed: invalid password")
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
 			return
 		}
 
 		token, refreshToken, expiresAt, err := generateTokens(user.ID, user.Username)
 		if err != nil {
+			log.Error().
+				Err(err).
+				Str("username", req.Username).
+				Uint("user_id", user.ID).
+				Msg("Failed to generate token")
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not generate token"})
 			return
 		}
+
+		log.Info().
+			Str("username", user.Username).
+			Uint("user_id", user.ID).
+			Str("client_ip", c.ClientIP()).
+			Time("expires_at", time.Unix(expiresAt, 0)).
+			Msg("User logged in successfully")
 
 		c.JSON(http.StatusOK, TokenResponse{
 			Token:        token,
@@ -147,14 +183,26 @@ func generateTokens(userID uint, username string) (string, string, int64, error)
 
 func authMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		// Get request-scoped logger from context
+		log := logger.GetLoggerFromContext(c)
+		
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
+			log.Warn().
+				Str("client_ip", c.ClientIP()).
+				Str("path", c.Request.URL.Path).
+				Msg("Authentication failed: missing Authorization header")
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header required"})
 			c.Abort()
 			return
 		}
 
 		if len(authHeader) < 7 || authHeader[:7] != "Bearer " {
+			log.Warn().
+				Str("client_ip", c.ClientIP()).
+				Str("path", c.Request.URL.Path).
+				Str("auth_header", authHeader[:min(len(authHeader), 10)] + "..."). // Log only the beginning of the header
+				Msg("Authentication failed: invalid authorization format")
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid authorization header format"})
 			c.Abort()
 			return
@@ -168,10 +216,28 @@ func authMiddleware() gin.HandlerFunc {
 		})
 
 		if err != nil || !token.Valid {
+			log.Warn().
+				Err(err).
+				Str("client_ip", c.ClientIP()).
+				Str("path", c.Request.URL.Path).
+				Msg("Authentication failed: invalid or expired token")
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
 			c.Abort()
 			return
 		}
+
+		// Update logger with user information
+		newLogger := log.With().
+			Uint("user_id", claims.UserID).
+			Str("username", claims.Username).
+			Logger()
+		c.Set(logger.ContextKeyLogger, &newLogger)
+		
+		log.Debug().
+			Uint("user_id", claims.UserID).
+			Str("username", claims.Username).
+			Str("path", c.Request.URL.Path).
+			Msg("User authenticated successfully")
 
 		c.Set("userID", claims.UserID)
 		c.Set("username", claims.Username)
@@ -179,17 +245,40 @@ func authMiddleware() gin.HandlerFunc {
 	}
 }
 
+// Helper function for string length comparison
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
 func createDefaultUser(db *gorm.DB) {
 	var count int64
 	db.Model(&User{}).Count(&count)
 
 	if count == 0 {
-		hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("admin123"), bcrypt.DefaultCost)
+		logger.Info("No users found, creating default admin user")
+		
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte("admin123"), bcrypt.DefaultCost)
+		if err != nil {
+			logger.Error("Failed to hash default admin password", err)
+			return
+		}
+		
 		user := User{
 			Username: "admin",
 			Password: string(hashedPassword),
 		}
-		db.Create(&user)
+		
+		if err := db.Create(&user).Error; err != nil {
+			logger.Error("Failed to create default admin user", err)
+			return
+		}
+		
+		logger.Info("Default admin user created successfully", 
+			logger.Uint("user_id", user.ID),
+			logger.Str("username", user.Username))
 	}
 }
 

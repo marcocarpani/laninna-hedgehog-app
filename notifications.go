@@ -4,13 +4,13 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"math"
 	"net/http"
 	"sort"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/laninna/hedgehog-app/logger"
 	"gorm.io/gorm"
 )
 
@@ -74,27 +74,27 @@ func (ns *NotificationService) loadSettings() {
 
 // Checker principale per tutte le notifiche
 func (ns *NotificationService) CheckAllNotifications() error {
-	log.Println("🔍 Running notification checks...")
+	logger.Info("🔍 Running notification checks...")
 
 	// Pulisci notifiche vecchie
 	ns.cleanOldNotifications()
 
 	// Controlla terapie
 	if err := ns.checkTherapyNotifications(); err != nil {
-		log.Printf("Errore controllo terapie: %v", err)
+		logger.Error("Errore controllo terapie", err, logger.Str("component", "notifications"))
 	}
 
 	// Controlla peso
 	if err := ns.checkWeightNotifications(); err != nil {
-		log.Printf("Errore controllo peso: %v", err)
+		logger.Error("Errore controllo peso", err, logger.Str("component", "notifications"))
 	}
 
 	// Controlla pesature mancanti
 	if err := ns.checkMissingWeighings(); err != nil {
-		log.Printf("Errore controllo pesature: %v", err)
+		logger.Error("Errore controllo pesature", err, logger.Str("component", "notifications"))
 	}
 
-	log.Println("✅ Notification checks completed")
+	logger.Info("✅ Notification checks completed", logger.Str("component", "notifications"))
 	return nil
 }
 
@@ -381,11 +381,16 @@ func (ns *NotificationService) createNotification(notification Notification) {
 	}
 
 	if err := ns.db.Create(&notification).Error; err != nil {
-		log.Printf("Errore creazione notifica: %v", err)
+		logger.Error("Errore creazione notifica", err, 
+			logger.Str("component", "notifications"),
+			logger.Str("notification_type", string(notification.Type)))
 		return
 	}
 
-	log.Printf("📢 Notifica creata: %s - %s", notification.Type, notification.Title)
+	logger.Info("📢 Notifica creata", 
+		logger.Str("component", "notifications"),
+		logger.Str("type", string(notification.Type)), 
+		logger.Str("title", notification.Title))
 
 	// Invia notifiche esterne se abilitate
 	go ns.sendExternalNotifications(notification)
@@ -413,12 +418,18 @@ func (ns *NotificationService) cleanOldNotifications() {
 
 func (ns *NotificationService) sendEmailNotification(notification Notification) {
 	// Placeholder per invio email
-	log.Printf("📧 Email notification sent: %s", notification.Title)
+	logger.Info("📧 Email notification sent", 
+		logger.Str("component", "notifications"),
+		logger.Str("title", notification.Title),
+		logger.Str("type", string(notification.Type)))
 }
 
 func (ns *NotificationService) sendWebhookNotification(notification Notification) {
 	// Placeholder per webhook
-	log.Printf("🔗 Webhook notification sent: %s", notification.Title)
+	logger.Info("🔗 Webhook notification sent", 
+		logger.Str("component", "notifications"),
+		logger.Str("title", notification.Title),
+		logger.Str("type", string(notification.Type)))
 }
 
 // API Handlers
@@ -747,7 +758,7 @@ func StartNotificationScheduler(db *gorm.DB) {
 		ns.CheckAllNotifications()
 	}()
 
-	log.Println("📅 Notification scheduler started")
+	logger.Info("📅 Notification scheduler started", logger.Str("component", "notifications"))
 }
 
 // Aggiungi route al router principale

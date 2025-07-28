@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/laninna/hedgehog-app/logger"
 	"gorm.io/gorm"
 	"net/http"
 	"strconv"
@@ -38,8 +39,12 @@ func getHedgehogs(db *gorm.DB) gin.HandlerFunc {
 // @Router /hedgehogs [post]
 func createHedgehog(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		// Get request-scoped logger from context
+		log := logger.GetLoggerFromContext(c)
+		
 		var hedgehog Hedgehog
 		if err := c.ShouldBindJSON(&hedgehog); err != nil {
+			log.Warn().Err(err).Msg("Invalid hedgehog data received")
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
@@ -50,16 +55,32 @@ func createHedgehog(db *gorm.DB) gin.HandlerFunc {
 		
 		// Validate that if status is 'released', ReleaseDate is set
 		if hedgehog.Status == "released" && hedgehog.ReleaseDate == nil {
+			log.Warn().
+				Str("status", hedgehog.Status).
+				Str("name", hedgehog.Name).
+				Msg("Validation error: Release date is required when status is 'released'")
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Release date is required when status is 'released'"})
 			return
 		}
 
 		if err := db.Create(&hedgehog).Error; err != nil {
+			log.Error().Err(err).
+				Str("name", hedgehog.Name).
+				Str("status", hedgehog.Status).
+				Msg("Failed to create hedgehog")
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
 		db.Preload("Area").Preload("Area.Room").First(&hedgehog, hedgehog.ID)
+		
+		log.Info().
+			Uint("id", hedgehog.ID).
+			Str("name", hedgehog.Name).
+			Str("status", hedgehog.Status).
+			Time("arrival_date", hedgehog.ArrivalDate).
+			Msg("Hedgehog created successfully")
+			
 		c.JSON(http.StatusCreated, hedgehog)
 	}
 }

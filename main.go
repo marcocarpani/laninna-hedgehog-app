@@ -24,11 +24,11 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	"github.com/laninna/hedgehog-app/logger"
 	"github.com/swaggo/files"
 	"github.com/swaggo/gin-swagger"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
-	"log"
 	"net/http"
 	"os"
 
@@ -36,15 +36,28 @@ import (
 )
 
 func main() {
+	// Initialize logger
+	logConfig := logger.DefaultConfig()
+	logConfig.Pretty = true // Use pretty console output for development
+	logger.Init(logConfig)
+	
+	// Set log level from environment variable if present
+	logLevel := os.Getenv("LOG_LEVEL")
+	if logLevel != "" {
+		if err := logger.SetLevel(logLevel); err != nil {
+			logger.Warn("Invalid log level, using default", logger.Str("level", logLevel))
+		}
+	}
+
 	// Carica variabili d'ambiente
 	if err := godotenv.Load(); err != nil {
-		log.Println("No .env file found")
+		logger.Info("No .env file found")
 	}
 
 	// Inizializza database
 	db, err := initDB()
 	if err != nil {
-		log.Fatal("Failed to connect to database:", err)
+		logger.Fatal("Failed to connect to database", err)
 	}
 
 	// Inizializza router
@@ -58,8 +71,12 @@ func main() {
 		port = "8080"
 	}
 
-	log.Printf("🦔 La Ninna server starting on port %s", port)
-	log.Fatal(http.ListenAndServe(":"+port, r))
+	logger.Info("🦔 La Ninna server starting", logger.Str("port", port))
+	
+	// Start HTTP server
+	if err := http.ListenAndServe(":"+port, r); err != nil {
+		logger.Fatal("Server failed to start", err)
+	}
 }
 
 func initDB() (*gorm.DB, error) {
@@ -90,7 +107,17 @@ func initDB() (*gorm.DB, error) {
 }
 
 func setupRouter(db *gorm.DB) *gin.Engine {
-	r := gin.Default()
+	// Use gin.New() instead of gin.Default() to avoid using the default logger
+	r := gin.New()
+	
+	// Add recovery middleware to handle panics
+	r.Use(gin.Recovery())
+	
+	// Add structured logging middleware
+	r.Use(logger.RequestLogger())
+	
+	// Add user context middleware to extract user info from JWT
+	r.Use(logger.UserContextMiddleware())
 
 	// CORS middleware
 	r.Use(cors.New(cors.Config{
