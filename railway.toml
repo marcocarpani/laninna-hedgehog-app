@@ -1,8 +1,11 @@
 # 🦔 La Ninna - Railway Configuration
 
 [build]
-  builder = "nixpacks"
-  buildCommand = "go install github.com/swaggo/swag/cmd/swag@latest && ~/go/bin/swag init && go build -o laninna-app ."
+  # Use Dockerfile for consistency across environments
+  builder = "DOCKERFILE"
+  dockerfilePath = "Dockerfile"
+  # Fallback if Dockerfile is not supported
+  buildCommand = "go install github.com/swaggo/swag/cmd/swag@latest && ~/go/bin/swag init && go build -ldflags=\"-w -s\" -o laninna-app ."
 
 [deploy]
   startCommand = "./laninna-app"
@@ -10,19 +13,40 @@
   healthcheckTimeout = 300
   restartPolicyType = "ON_FAILURE"
   restartPolicyMaxRetries = 10
+  
+  # Resource allocations
+  numReplicas = 1
+  sleepApplication = false
+  restartPolicyType = "ON_FAILURE"
+
+# Volume configuration for data persistence
+[[volumes]]
+  name = "laninna-data"
+  mountPath = "/data"
+  newDisk = true
+  sizeGB = 1
 
 [environments.production]
   PORT = "8080"
   GIN_MODE = "release"
-  DB_PATH = "/app/data/laninna.db"
+  DB_PATH = "/data/laninna.db"
   AUTO_MIGRATE = "true"
   JWT_SECRET = "${{JWT_SECRET}}"
   FONTS_PATH = "./fonts"
+  NOTIFICATION_INTERVAL_MINUTES = "30"
+  EXPORT_MAX_RECORDS = "1000"
+  REQUEST_TIMEOUT_SECONDS = "30"
+  RATE_LIMIT_REQUESTS_PER_MINUTE = "100"
   
 [environments.staging]
   PORT = "8080"
   GIN_MODE = "debug"
-  DB_PATH = "/app/data/laninna-staging.db"
+  DB_PATH = "/data/laninna-staging.db"
   AUTO_MIGRATE = "true"
   JWT_SECRET = "${{JWT_SECRET_STAGING}}"
   FONTS_PATH = "./fonts"
+  NOTIFICATION_INTERVAL_MINUTES = "30"
+  EXPORT_MAX_RECORDS = "1000"
+  REQUEST_TIMEOUT_SECONDS = "30"
+  RATE_LIMIT_REQUESTS_PER_MINUTE = "100"
+  DEBUG_SQL = "true"

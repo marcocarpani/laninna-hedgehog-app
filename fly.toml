@@ -2,31 +2,44 @@
 
 app = "laninna-hedgehog-app"
 primary_region = "fra"
+kill_signal = "SIGINT"
+kill_timeout = "5s"
 
+# Use Dockerfile instead of buildpacks for consistency
 [build]
-  builder = "paketobuildpacks/builder:base"
-  buildpacks = ["gcr.io/paketo-buildpacks/go"]
+  dockerfile = "Dockerfile"
+
+# Add secondary regions for better availability
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory_mb = 512
   
-[build.args]
-  BP_GO_BUILD_FLAGS = "-ldflags='-w -s'"
-  BP_GO_BUILD_IMPORT_PATH = "github.com/laninna/hedgehog-app"
-  
-[[build.env]]
-  name = "BP_GO_BUILD_LDFLAGS"
-  value = "-w -s"
+[metrics]
+  port = 8080
+  path = "/metrics"
 
 [env]
   PORT = "8080"
   GIN_MODE = "release"
   DB_PATH = "/data/laninna.db"
   AUTO_MIGRATE = "true"
+  FONTS_PATH = "./fonts"
+  NOTIFICATION_INTERVAL_MINUTES = "30"
+  EXPORT_MAX_RECORDS = "1000"
+  REQUEST_TIMEOUT_SECONDS = "30"
+  RATE_LIMIT_REQUESTS_PER_MINUTE = "100"
+
+# JWT_SECRET should be set via secrets
+# fly secrets set JWT_SECRET=your-secret-value
 
 [http_service]
   internal_port = 8080
   force_https = true
   auto_stop_machines = true
   auto_start_machines = true
-  min_machines_running = 0
+  min_machines_running = 1
+  processes = ["app"]
 
 [[mounts]]
   source = "laninna_data"

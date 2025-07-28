@@ -15,9 +15,21 @@ services:
       - AUTO_MIGRATE=true
       - JWT_SECRET=${JWT_SECRET:-laninna-default-secret-change-in-production}
       - NOTIFICATION_INTERVAL_MINUTES=30
+      - FONTS_PATH=./fonts
+      - EXPORT_MAX_RECORDS=1000
+      - REQUEST_TIMEOUT_SECONDS=30
+      - RATE_LIMIT_REQUESTS_PER_MINUTE=100
     volumes:
       - laninna_data:/data
-      - ./logs:/root/logs
+      - ./logs:/app/logs
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
@@ -32,18 +44,28 @@ services:
 
   # Optional: Add a reverse proxy
   traefik:
-    image: traefik:v2.10
+    image: traefik:v2.10.5
     container_name: laninna-traefik
     command:
       - "--api.insecure=true"
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.web.address=:80"
+      - "--accesslog=true"
+      - "--log.level=INFO"
     ports:
       - "80:80"
       - "8081:8080"  # Traefik dashboard
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
     restart: unless-stopped
     profiles:
       - proxy

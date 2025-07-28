@@ -6,12 +6,16 @@ services:
     env: go
     region: frankfurt
     plan: starter
+    runtime: go
     buildCommand: |
+      # Use Go 1.22
+      go mod download
       go install github.com/swaggo/swag/cmd/swag@latest
       ~/go/bin/swag init
-      go build -o laninna-app .
+      go build -ldflags="-w -s" -o laninna-app .
     startCommand: ./laninna-app
     healthCheckPath: /health
+    autoDeploy: true
     
     envVars:
       - key: PORT
@@ -19,11 +23,13 @@ services:
       - key: GIN_MODE
         value: release
       - key: DB_PATH
-        value: /opt/render/project/src/laninna.db
+        value: /data/laninna.db
       - key: AUTO_MIGRATE
         value: true
       - key: JWT_SECRET
         sync: false
+        # For production, set this via the Render dashboard or CLI
+        # render secret set JWT_SECRET --value "your-secret-value"
       - key: NOTIFICATION_INTERVAL_MINUTES
         value: 30
       - key: EXPORT_MAX_RECORDS
@@ -37,21 +43,31 @@ services:
 
     disk:
       name: laninna-data
-      mountPath: /opt/render/project/src
+      mountPath: /data
       sizeGB: 1
 
   - type: cron
     name: laninna-notifications
     env: go
+    runtime: go
     schedule: "*/30 * * * *"
     buildCommand: |
+      # Use Go 1.22
+      go mod download
       go install github.com/swaggo/swag/cmd/swag@latest
       ~/go/bin/swag init
-      go build -o laninna-app .
+      go build -ldflags="-w -s" -o laninna-app .
     startCommand: ./laninna-app -task=notifications
     
     envVars:
+      - key: GIN_MODE
+        value: release
       - key: DB_PATH
-        value: /opt/render/project/src/laninna.db
+        value: /data/laninna.db
       - key: JWT_SECRET
         sync: false
+        # For production, set this via the Render dashboard or CLI
+      - key: FONTS_PATH
+        value: ./fonts
+      - key: NOTIFICATION_INTERVAL_MINUTES
+        value: 30
