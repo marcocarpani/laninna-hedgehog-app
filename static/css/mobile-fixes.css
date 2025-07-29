@@ -77,6 +77,13 @@
   .mt-16 .grid-cols-1.md\:grid-cols-3 {
     grid-template-columns: 1fr !important;
     gap: 0.75rem !important;
+    margin-bottom: 80px !important; /* Add bottom margin to prevent overlap with bottom navigation */
+    padding-bottom: 20px !important; /* Additional padding for better spacing */
+  }
+  
+  /* Ensure the quick action buttons are fully visible */
+  .mt-16 {
+    padding-bottom: 80px !important; /* Add padding to the container to ensure content is visible above bottom nav */
   }
   
   /* Filter section - improve spacing */
@@ -110,6 +117,13 @@
     width: 95% !important;
     max-width: 95% !important;
     border-radius: 0.75rem !important;
+    margin-bottom: 70px !important; /* Add margin to prevent overlap with bottom navigation */
+  }
+  
+  /* Ensure modal content doesn't overlap with bottom navigation */
+  #main-modal .bg-white.shadow-2xl {
+    margin-bottom: 70px !important;
+    max-height: calc(90vh - 70px) !important; /* Adjust max height to account for bottom nav */
   }
   
   /* Improve scrollable containers for mobile */
@@ -120,6 +134,18 @@
   /* Chart container - ensure responsive sizing */
   #weight-chart {
     height: 250px !important;
+  }
+  
+  /* Ensure the 'Aggiungi Terapia' button is always visible */
+  #therapies-content .flex.justify-between.items-center {
+    margin-bottom: 10px !important;
+  }
+  
+  /* Ensure form buttons at the bottom are always visible and not hidden by bottom navigation */
+  .flex.justify-end.space-x-4.pt-4.border-t,
+  .flex.justify-end.pt-4.border-t {
+    margin-bottom: 15px !important;
+    padding-bottom: 5px !important;
   }
   
   /* Adjust form layouts for very small screens */
