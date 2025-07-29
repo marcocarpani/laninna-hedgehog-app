@@ -144,3 +144,37 @@ cp /data/laninna.db /tmp/laninna-backup-$(date +%Y%m%d).db
 - [Render Documentation](https://render.com/docs)
 - [Cloudinary Documentation](https://cloudinary.com/documentation)
 - [La Ninna Project Guidelines](PROJECT_GUIDELINES.md)
+
+### Code removed for cron notification
+
+
+- type: cron
+  name: laninna-notifications
+  runtime: go
+  schedule: "*/30 * * * *"
+  buildCommand: |
+  go mod download
+  go install github.com/swaggo/swag/cmd/swag@latest
+  ~/go/bin/swag init
+  go build -ldflags="-w -s" -o laninna-app .
+  startCommand: ./laninna-app -task=notifications
+
+  envVars:
+   - key: GIN_MODE
+     value: release
+   - key: DB_PATH
+     value: /data/laninna.db
+   - key: JWT_SECRET
+     sync: false
+     # For production, set this via the Render dashboard or CLI
+   - key: FONTS_PATH
+     value: ./fonts
+   - key: NOTIFICATION_INTERVAL_MINUTES
+     value: 30
+  # Cloudinary configuration (optional - for image uploads)
+   - key: CLOUDINARY_CLOUD_NAME
+     sync: false
+   - key: CLOUDINARY_API_KEY
+     sync: false
+   - key: CLOUDINARY_API_SECRET
+     sync: false

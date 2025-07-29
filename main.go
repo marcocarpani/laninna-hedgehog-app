@@ -90,24 +90,43 @@ func main() {
 }
 
 func initDB() (*gorm.DB, error) {
-	db, err := gorm.Open(sqlite.Open("laninna.db"), &gorm.Config{})
+	// Get database path from environment variable or use default
+	dbPath := os.Getenv("DB_PATH")
+	if dbPath == "" {
+		dbPath = "laninna.db"
+		logger.Info("DB_PATH not set, using default database path", logger.Str("path", dbPath))
+	} else {
+		logger.Info("Using database path from DB_PATH", logger.Str("path", dbPath))
+	}
+	
+	db, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{})
 	if err != nil {
 		return nil, err
 	}
 
-	// Auto migrate models (incluse notifiche)
-	err = db.AutoMigrate(
-		&User{},
-		&Hedgehog{},
-		&Room{},
-		&Area{},
-		&Therapy{},
-		&WeightRecord{},
-		&Notification{},         // ← Nuovo
-		&NotificationSettings{}, // ← Nuovo
-	)
-	if err != nil {
-		return nil, err
+	// Check if auto migrations should be run
+	autoMigrate := os.Getenv("AUTO_MIGRATE")
+	if autoMigrate == "true" {
+		logger.Info("Running database migrations (AUTO_MIGRATE=true)")
+		
+		// Auto migrate models (incluse notifiche)
+		err = db.AutoMigrate(
+			&User{},
+			&Hedgehog{},
+			&Room{},
+			&Area{},
+			&Therapy{},
+			&WeightRecord{},
+			&Notification{},         // ← Nuovo
+			&NotificationSettings{}, // ← Nuovo
+		)
+		if err != nil {
+			logger.Error("Database migration failed", err)
+			return nil, err
+		}
+		logger.Info("Database migrations completed successfully")
+	} else {
+		logger.Info("Skipping database migrations (AUTO_MIGRATE not set to 'true')")
 	}
 
 	// Crea utente admin di default

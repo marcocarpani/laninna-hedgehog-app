@@ -9,11 +9,16 @@ kill_timeout = "5s"
 [build]
   dockerfile = "Dockerfile"
 
-# Add secondary regions for better availability
+# VM configuration for multiple regions
 [[vm]]
   cpu_kind = "shared"
   cpus = 1
   memory_mb = 512
+  
+# Add secondary regions for better availability
+[regions]
+  primary = ["fra"]
+  fallback = ["ams", "lhr"]
   
 [metrics]
   port = 8080
@@ -29,9 +34,17 @@ kill_timeout = "5s"
   EXPORT_MAX_RECORDS = "1000"
   REQUEST_TIMEOUT_SECONDS = "30"
   RATE_LIMIT_REQUESTS_PER_MINUTE = "100"
+  # Cloudinary configuration
+  CLOUDINARY_CLOUD_NAME = "dbzxfdul3"
+  CLOUDINARY_API_KEY = "745719433317359"
+  CLOUDINARY_API_SECRET = "MDTCH37UjiuzhiZhZCtVtYpUcjY"
 
 # JWT_SECRET should be set via secrets
 # fly secrets set JWT_SECRET=your-secret-value
+# For production, consider setting Cloudinary credentials as secrets:
+# fly secrets set CLOUDINARY_CLOUD_NAME=your-cloud-name
+# fly secrets set CLOUDINARY_API_KEY=your-api-key
+# fly secrets set CLOUDINARY_API_SECRET=your-api-secret
 
 [http_service]
   internal_port = 8080

@@ -1,7 +1,7 @@
 # 🦔 La Ninna - Multi-stage Docker Build
 
 # Build stage
-FROM golang:1.22-alpine3.19 AS builder
+FROM golang:1.24.5-alpine3.22 AS builder
 
 # Install build dependencies
 RUN apk add --no-cache git sqlite-dev gcc musl-dev
@@ -14,19 +14,19 @@ RUN go mod download
 
 # Install Swagger CLI and Air for hot reloading
 RUN go install github.com/swaggo/swag/cmd/swag@latest
-RUN go install github.com/cosmtrek/air@latest
+RUN go install github.com/air-verse/air@latest
 
 # Copy source code
 COPY . .
 
 # Generate Swagger docs
-RUN ~/go/bin/swag init
+RUN $(go env GOPATH)/bin/swag init
 
 # Build the application with optimizations
 RUN CGO_ENABLED=1 GOOS=linux go build -ldflags="-w -s" -a -installsuffix cgo -o laninna-app .
 
 # Runtime stage
-FROM alpine:3.19
+FROM alpine:3.22
 
 # Install runtime dependencies
 RUN apk --no-cache add ca-certificates sqlite tzdata
@@ -47,8 +47,7 @@ COPY --from=builder /app/static ./static
 COPY --from=builder /app/fonts ./fonts
 COPY --from=builder /app/docs ./docs
 
-# Copy Air configuration for development
-COPY --from=builder /app/.air.toml ./.air.toml
+# Air configuration is not needed for production
 
 # Set environment variables
 ENV PORT=8080

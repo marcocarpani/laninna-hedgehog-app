@@ -1,7 +1,5 @@
 # 🦔 La Ninna - Development Docker Compose
 
-version: '3.8'
-
 services:
   laninna-dev:
     build: 
@@ -23,6 +21,10 @@ services:
       - EXPORT_MAX_RECORDS=1000
       - REQUEST_TIMEOUT_SECONDS=30
       - RATE_LIMIT_REQUESTS_PER_MINUTE=100
+      # Cloudinary configuration
+      - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME:-dbzxfdul3}
+      - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY:-745719433317359}
+      - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET:-MDTCH37UjiuzhiZhZCtVtYpUcjY}
     volumes:
       - ./:/app
       - laninna_dev_data:/data

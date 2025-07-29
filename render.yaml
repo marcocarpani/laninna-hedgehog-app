@@ -3,12 +3,10 @@
 services:
   - type: web
     name: laninna-hedgehog-app
-    env: go
     region: frankfurt
     plan: starter
     runtime: go
     buildCommand: |
-      # Use Go 1.22
       go mod download
       go install github.com/swaggo/swag/cmd/swag@latest
       ~/go/bin/swag init
@@ -58,29 +56,3 @@ services:
       name: laninna-data
       mountPath: /data
       sizeGB: 1
-
-  - type: cron
-    name: laninna-notifications
-    env: go
-    runtime: go
-    schedule: "*/30 * * * *"
-    buildCommand: |
-      # Use Go 1.22
-      go mod download
-      go install github.com/swaggo/swag/cmd/swag@latest
-      ~/go/bin/swag init
-      go build -ldflags="-w -s" -o laninna-app .
-    startCommand: ./laninna-app -task=notifications
-    
-    envVars:
-      - key: GIN_MODE
-        value: release
-      - key: DB_PATH
-        value: /data/laninna.db
-      - key: JWT_SECRET
-        sync: false
-        # For production, set this via the Render dashboard or CLI
-      - key: FONTS_PATH
-        value: ./fonts
-      - key: NOTIFICATION_INTERVAL_MINUTES
-        value: 30
