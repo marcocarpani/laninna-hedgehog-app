@@ -2004,7 +2004,6 @@ const docTemplate = `{
                         "in_care",
                         "recovered",
                         "deceased",
-                        "released"
                     ],
                     "example": "in_care"
                 },

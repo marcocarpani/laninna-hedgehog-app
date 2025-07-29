@@ -24,7 +24,7 @@ type Hedgehog struct {
 	Description   string         `json:"description" example:"Riccio trovato nel giardino" description:"Additional information about the hedgehog"`
 	Picture       string         `json:"picture" gorm:"default:'https://res.cloudinary.com/dbzxfdul3/image/upload/v1753739516/cute-hedgehog-cartoon-porcupine-illustration_1058532-11530_kxu4lt.jpg'" example:"https://res.cloudinary.com/demo/image/upload/v1312461204/sample.jpg" description:"URL to the hedgehog's picture"`
 	ArrivalDate   time.Time      `json:"arrival_date" example:"2024-01-15T10:30:00Z" description:"When the hedgehog arrived at the center" format:"date-time"`
-	Status        string         `json:"status" gorm:"default:'in_care'" example:"in_care" enums:"in_care,recovered,deceased,released" description:"Current status of the hedgehog"`
+	Status        string         `json:"status" gorm:"default:'in_care'" example:"in_care" enums:"in_care,recovered,deceased" description:"Current status of the hedgehog"`
 	ReleaseDate   *time.Time     `json:"release_date,omitempty" example:"2024-07-28T10:30:00Z" description:"When the hedgehog was or will be released" format:"date-time"`
 	AreaID        *uint          `json:"area_id" example:"1" description:"ID of the area where the hedgehog is located"`
 	Area          *Area          `json:"area,omitempty" gorm:"foreignKey:AreaID" description:"Area where the hedgehog is located"`

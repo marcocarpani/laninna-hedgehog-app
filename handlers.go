@@ -41,7 +41,7 @@ func createHedgehog(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Get request-scoped logger from context
 		log := logger.GetLoggerFromContext(c)
-		
+
 		var hedgehog Hedgehog
 		if err := c.ShouldBindJSON(&hedgehog); err != nil {
 			log.Warn().Err(err).Msg("Invalid hedgehog data received")
@@ -51,16 +51,6 @@ func createHedgehog(db *gorm.DB) gin.HandlerFunc {
 
 		if hedgehog.ArrivalDate.IsZero() {
 			hedgehog.ArrivalDate = time.Now()
-		}
-		
-		// Validate that if status is 'released', ReleaseDate is set
-		if hedgehog.Status == "released" && hedgehog.ReleaseDate == nil {
-			log.Warn().
-				Str("status", hedgehog.Status).
-				Str("name", hedgehog.Name).
-				Msg("Validation error: Release date is required when status is 'released'")
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Release date is required when status is 'released'"})
-			return
 		}
 
 		if err := db.Create(&hedgehog).Error; err != nil {
@@ -73,14 +63,14 @@ func createHedgehog(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		db.Preload("Area").Preload("Area.Room").First(&hedgehog, hedgehog.ID)
-		
+
 		log.Info().
 			Uint("id", hedgehog.ID).
 			Str("name", hedgehog.Name).
 			Str("status", hedgehog.Status).
 			Time("arrival_date", hedgehog.ArrivalDate).
 			Msg("Hedgehog created successfully")
-			
+
 		c.JSON(http.StatusCreated, hedgehog)
 	}
 }
@@ -137,12 +127,6 @@ func updateHedgehog(db *gorm.DB) gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		
-		// Validate that if status is 'released', ReleaseDate is set
-		if hedgehog.Status == "released" && hedgehog.ReleaseDate == nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Release date is required when status is 'released'"})
-			return
-		}
 
 		if err := db.Save(&hedgehog).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -168,20 +152,20 @@ func updateHedgehog(db *gorm.DB) gin.HandlerFunc {
 func deleteHedgehog(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.Param("id")
-		
+
 		// First check if the hedgehog exists
 		var hedgehog Hedgehog
 		if err := db.First(&hedgehog, id).Error; err != nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Hedgehog not found"})
 			return
 		}
-		
+
 		// If hedgehog exists, proceed with deletion
 		if err := db.Delete(&hedgehog).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-		
+
 		c.JSON(http.StatusOK, gin.H{"message": "Hedgehog deleted"})
 	}
 }

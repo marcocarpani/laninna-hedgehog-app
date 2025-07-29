@@ -70,7 +70,6 @@
                     <option value="in_care">In cura</option>
                     <option value="recovered">Recuperato</option>
                     <option value="deceased">Deceduto</option>
-                    <option value="released">Rilasciato</option>
                 </select>
                 <select id="roomFilter" onchange="filterHedgehogs()"
                         class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown">
@@ -201,7 +200,6 @@ function getStatusColor(status) {
         case 'in_care': return 'bg-blue-100 text-blue-800';
         case 'recovered': return 'bg-green-100 text-green-800';
         case 'deceased': return 'bg-red-100 text-red-800';
-        case 'released': return 'bg-amber-100 text-amber-800';
         default: return 'bg-gray-100 text-gray-800';
     }
 }
@@ -211,7 +209,6 @@ function getStatusLabel(status) {
         case 'in_care': return 'In cura';
         case 'recovered': return 'Recuperato';
         case 'deceased': return 'Deceduto';
-        case 'released': return 'Rilasciato';
         default: return status;
     }
 }
@@ -280,7 +277,6 @@ function openHedgehogForm() {
                             <option value="in_care">In cura</option>
                             <option value="recovered">Recuperato</option>
                             <option value="deceased">Deceduto</option>
-                            <option value="released">Rilasciato</option>
                         </select>
                     </div>
                 </div>
@@ -307,13 +303,6 @@ function openHedgehogForm() {
                     </div>
                 </div>
                 
-                <div id="release_date_container" class="hidden">
-                    <div>
-                        <label class="block text-gray-700 font-bold mb-2">Data di Rilascio</label>
-                        <input type="date" id="release_date" name="release_date"
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown">
-                    </div>
-                </div>
 
                 <div class="flex justify-end space-x-4 pt-4 border-t">
                     <button type="button" onclick="document.getElementById('main-modal').classList.add('hidden')"
@@ -338,19 +327,6 @@ function openHedgehogForm() {
     // Load areas
     loadAreasForForm();
     
-    // Show/hide release date field based on status
-    document.getElementById('status').addEventListener('change', function() {
-        const releaseContainer = document.getElementById('release_date_container');
-        if (this.value === 'released') {
-            releaseContainer.classList.remove('hidden');
-            // Set default release date to today if not already set
-            if (!document.getElementById('release_date').value) {
-                document.getElementById('release_date').value = new Date().toISOString().split('T')[0];
-            }
-        } else {
-            releaseContainer.classList.add('hidden');
-        }
-    });
     
     // Handle form submission
     document.getElementById('hedgehogForm').addEventListener('submit', handleHedgehogSubmit);
@@ -453,7 +429,6 @@ async function editHedgehog(id) {
                                 <option value="in_care" ${hedgehog.status === 'in_care' ? 'selected' : ''}>In cura</option>
                                 <option value="recovered" ${hedgehog.status === 'recovered' ? 'selected' : ''}>Recuperato</option>
                                 <option value="deceased" ${hedgehog.status === 'deceased' ? 'selected' : ''}>Deceduto</option>
-                                <option value="released" ${hedgehog.status === 'released' ? 'selected' : ''}>Rilasciato</option>
                             </select>
                         </div>
                     </div>
@@ -480,13 +455,6 @@ async function editHedgehog(id) {
                         </div>
                     </div>
                     
-                    <div id="edit_release_date_container" class="${hedgehog.status === 'released' ? '' : 'hidden'}">
-                        <div>
-                            <label class="block text-gray-700 font-bold mb-2">Data di Rilascio</label>
-                            <input type="date" id="release_date" name="release_date" value="${hedgehog.release_date ? hedgehog.release_date.split('T')[0] : ''}"
-                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-hedgehog-brown">
-                        </div>
-                    </div>
 
                     <div class="flex justify-end space-x-4 pt-4 border-t">
                         <button type="button" onclick="document.getElementById('main-modal').classList.add('hidden')"
@@ -508,19 +476,6 @@ async function editHedgehog(id) {
         // Load areas and set current selection
         await loadAreasForEditForm(hedgehog.area_id);
         
-        // Show/hide release date field based on status
-        document.getElementById('status').addEventListener('change', function() {
-            const releaseContainer = document.getElementById('edit_release_date_container');
-            if (this.value === 'released') {
-                releaseContainer.classList.remove('hidden');
-                // Set default release date to today if not already set
-                if (!document.getElementById('release_date').value) {
-                    document.getElementById('release_date').value = new Date().toISOString().split('T')[0];
-                }
-            } else {
-                releaseContainer.classList.add('hidden');
-            }
-        });
         
         // Handle form submission
         document.getElementById('hedgehogEditForm').addEventListener('submit', handleHedgehogEdit);
@@ -638,11 +593,6 @@ async function handleHedgehogSubmit(e) {
         arrival_date: formData.get('arrival_date') + 'T00:00:00Z',
         area_id: formData.get('area_id') ? parseInt(formData.get('area_id')) : null
     };
-    
-    // Include release date if status is 'released'
-    if (status === 'released' && formData.get('release_date')) {
-        data.release_date = formData.get('release_date') + 'T00:00:00Z';
-    }
 
     try {
         const response = await fetch('/api/hedgehogs', {
@@ -702,11 +652,6 @@ async function handleHedgehogEdit(e) {
         arrival_date: formData.get('arrival_date') + 'T00:00:00Z',
         area_id: formData.get('area_id') ? parseInt(formData.get('area_id')) : null
     };
-    
-    // Include release date if status is 'released'
-    if (status === 'released' && formData.get('release_date')) {
-        data.release_date = formData.get('release_date') + 'T00:00:00Z';
-    }
 
     try {
         const response = await fetch(`/api/hedgehogs/${hedgehogId}`, {
@@ -929,7 +874,6 @@ async function showHedgehogDetails(id) {
                         <h3 class="font-bold text-gray-800 mb-3">Informazioni Generali</h3>
                         <div class="space-y-2 text-sm">
                             <p><strong>Data Arrivo:</strong> ${formatDate(hedgehog.arrival_date)}</p>
-                            ${hedgehog.status === 'released' && hedgehog.release_date ? `<p><strong>Data Rilascio:</strong> ${formatDate(hedgehog.release_date)}</p>` : ''}
                             <p><strong>Area:</strong> ${hedgehog.area ? `${hedgehog.area.room?.name || 'Stanza'} - ${hedgehog.area.name}` : 'Nessuna area assegnata'}</p>
                             ${hedgehog.description ? `<p><strong>Descrizione:</strong> ${hedgehog.description}</p>` : ''}
                         </div>
