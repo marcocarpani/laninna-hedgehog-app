@@ -61,6 +61,7 @@
         </div>
     </div>
 
+    <script src="/static/js/offline.js"></script>
     <script>
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
@@ -86,7 +87,15 @@
                     errorDiv.classList.remove('hidden');
                 }
             } catch (error) {
-                errorDiv.textContent = 'Errore di connessione';
+                console.error('Errore login:', error);
+                // Use the error message from the Error object if available
+                if (error.message && error.message !== 'Failed to fetch') {
+                    errorDiv.textContent = error.message;
+                } else if (!navigator.onLine) {
+                    errorDiv.textContent = 'Sei offline. Connettiti a Internet per accedere.';
+                } else {
+                    errorDiv.textContent = 'Errore del server. Il server è irraggiungibile.';
+                }
                 errorDiv.classList.remove('hidden');
             }
         });

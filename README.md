@@ -40,6 +40,13 @@ A comprehensive web application for managing hedgehog rescue operations, built w
 - Statistical analysis and trends
 - Custom date range filtering
 
+### 📵 Offline Capabilities
+- Full offline functionality for field work
+- Local data caching for offline access
+- Background synchronization when back online
+- Visual indicators for offline status
+- Seamless transition between online and offline modes
+
 ## 🚀 Quick Start
 
 ### Prerequisites

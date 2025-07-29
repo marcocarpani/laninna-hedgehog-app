@@ -107,6 +107,7 @@
     </div>
 </div>
 
+<script src="/static/js/offline.js"></script>
 <script src="/static/js/mobile.js"></script>
 <script>
 // Check authentication
@@ -124,18 +125,52 @@ document.addEventListener('DOMContentLoaded', function() {
 
 async function loadHedgehogs() {
     try {
-        const response = await fetch('/api/hedgehogs', {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-        });
+        // Use fetchWithOfflineSupport to handle offline mode
+        const response = await fetchWithOfflineSupport('/api/hedgehogs');
         
         if (response.ok) {
             currentHedgehogs = await response.json();
             renderHedgehogs(currentHedgehogs);
+            
+            // Check if data is from offline cache
+            const isOfflineData = response.headers.get('x-from-cache') === 'true' || 
+                                 currentHedgehogs.offline === true;
+                                 
+            if (isOfflineData && offlineManager && !offlineManager.isOnline) {
+                // Show offline notification
+                if (typeof showToast === 'function') {
+                    showToast('Visualizzazione dati in modalità offline', 'info');
+                }
+                
+                // Add offline indicator to hedgehog cards
+                setTimeout(() => {
+                    document.querySelectorAll('#hedgehogs-list > div').forEach(card => {
+                        if (!card.classList.contains('has-offline-badge')) {
+                            card.classList.add('cached-item');
+                            
+                            // Add offline badge
+                            const header = card.querySelector('h3').parentNode;
+                            const badge = document.createElement('span');
+                            badge.className = 'offline-badge ml-2';
+                            badge.textContent = 'Offline';
+                            header.appendChild(badge);
+                            
+                            card.classList.add('has-offline-badge');
+                        }
+                    });
+                }, 100);
+            }
         } else {
             showError('Errore nel caricamento dei ricci');
         }
     } catch (error) {
-        showError('Errore di connessione');
+        console.error('Errore caricamento ricci:', error);
+        // Use the error message from the Error object if available
+        if (error.message && error.message !== 'Failed to fetch') {
+            showError(error.message);
+        } else {
+            showError('Errore di connessione. Verifica la tua connessione internet.');
+        }
     }
 }
 
@@ -234,9 +269,8 @@ function filterHedgehogs() {
 
 async function loadRoomsForFilter() {
     try {
-        const response = await fetch('/api/rooms', {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-        });
+        // Use fetchWithOfflineSupport to handle offline mode
+        const response = await fetchWithOfflineSupport('/api/rooms');
         const rooms = await response.json();
         
         const select = document.getElementById('roomFilter');
@@ -246,8 +280,28 @@ async function loadRoomsForFilter() {
             option.textContent = room.name;
             select.appendChild(option);
         });
+        
+        // Check if data is from offline cache
+        const isOfflineData = response.headers.get('x-from-cache') === 'true' || 
+                             rooms.offline === true;
+                             
+        if (isOfflineData && offlineManager && !offlineManager.isOnline) {
+            // Add offline indicator to select
+            select.classList.add('cached-item');
+            
+            // Add note about offline data
+            const note = document.createElement('div');
+            note.className = 'text-sm text-orange-600 mt-1';
+            note.innerHTML = '<i class="fas fa-info-circle mr-1"></i> Filtri caricati dalla cache offline';
+            select.parentNode.appendChild(note);
+        }
     } catch (error) {
         console.error('Errore caricamento stanze per filtro:', error);
+        
+        // Show error message
+        if (typeof showToast === 'function') {
+            showToast('Impossibile caricare le stanze per il filtro. Verifica la connessione.', 'error');
+        }
     }
 }
 
@@ -541,19 +595,32 @@ function deleteHedgehog(id) {
     showDeleteModal(
         'Elimina Riccio',
         'Questa azione non può essere annullata. Tutti i dati associati verranno eliminati.',
-        () => {
-            fetch(`/api/hedgehogs/${id}`, {
-                method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-            })
-            .then(response => {
+        async () => {
+            try {
+                // Use fetchWithOfflineSupport to handle offline mode
+                const response = await fetchWithOfflineSupport(`/api/hedgehogs/${id}`, {
+                    method: 'DELETE'
+                });
+                
                 if (response.ok) {
-                    showToast('Riccio eliminato con successo', 'success');
+                    // Check if this was an offline submission
+                    const responseData = await response.json();
+                    if (responseData.offline) {
+                        showToast('Richiesta di eliminazione salvata localmente. Verrà sincronizzata quando sarai online.', 'info');
+                    } else {
+                        showToast('Riccio eliminato con successo', 'success');
+                    }
+                    
+                    // Refresh hedgehogs list
                     loadHedgehogs();
                 } else {
-                    showError('Errore nell\'eliminazione');
+                    const error = await response.json();
+                    showToast('Errore: ' + (error.error || 'Errore sconosciuto'), 'error');
                 }
-            });
+            } catch (error) {
+                console.error('Errore eliminazione riccio:', error);
+                showToast('Errore di connessione. Verifica la tua connessione internet.', 'error');
+            }
         }
     );
 }
@@ -564,9 +631,8 @@ function showError(message) {
 
 async function loadAreasForForm() {
     try {
-        const response = await fetch('/api/areas', {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-        });
+        // Use fetchWithOfflineSupport to handle offline mode
+        const response = await fetchWithOfflineSupport('/api/areas');
         const areas = await response.json();
         
         const select = document.getElementById('area_id');
@@ -576,8 +642,28 @@ async function loadAreasForForm() {
             option.textContent = `${area.room?.name || 'Stanza'} - ${area.name}`;
             select.appendChild(option);
         });
+        
+        // Check if data is from offline cache
+        const isOfflineData = response.headers.get('x-from-cache') === 'true' || 
+                             areas.offline === true;
+                             
+        if (isOfflineData && offlineManager && !offlineManager.isOnline) {
+            // Add offline indicator to select
+            select.classList.add('cached-item');
+            
+            // Add note about offline data
+            const note = document.createElement('div');
+            note.className = 'text-sm text-orange-600 mt-1';
+            note.innerHTML = '<i class="fas fa-info-circle mr-1"></i> Dati caricati dalla cache offline';
+            select.parentNode.appendChild(note);
+        }
     } catch (error) {
         console.error('Errore caricamento aree:', error);
+        
+        // Show error message
+        if (typeof showToast === 'function') {
+            showToast('Impossibile caricare le aree. Verifica la connessione.', 'error');
+        }
     }
 }
 
@@ -595,10 +681,10 @@ async function handleHedgehogSubmit(e) {
     };
 
     try {
-        const response = await fetch('/api/hedgehogs', {
+        // Use fetchWithOfflineSupport to handle offline mode
+        const response = await fetchWithOfflineSupport('/api/hedgehogs', {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(data)
@@ -606,22 +692,36 @@ async function handleHedgehogSubmit(e) {
 
         if (response.ok) {
             document.getElementById('main-modal').classList.add('hidden');
-            showToast('Riccio aggiunto con successo', 'success');
+            
+            // Check if this was an offline submission
+            const responseData = await response.json();
+            if (responseData.offline) {
+                showToast('Riccio salvato localmente. Verrà sincronizzato quando sarai online.', 'info');
+            } else {
+                showToast('Riccio aggiunto con successo', 'success');
+            }
+            
+            // Refresh hedgehogs list
             loadHedgehogs();
         } else {
             const error = await response.json();
             showToast('Errore: ' + (error.error || 'Errore sconosciuto'), 'error');
         }
     } catch (error) {
-        showToast('Errore di connessione', 'error');
+        console.error('Errore invio riccio:', error);
+        // Use the error message from the Error object if available
+        if (error.message && error.message !== 'Failed to fetch') {
+            showToast(error.message, 'error');
+        } else {
+            showToast('Errore di connessione. Verifica la tua connessione internet.', 'error');
+        }
     }
 }
 
 async function loadAreasForEditForm(currentAreaId) {
     try {
-        const response = await fetch('/api/areas', {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-        });
+        // Use fetchWithOfflineSupport to handle offline mode
+        const response = await fetchWithOfflineSupport('/api/areas');
         const areas = await response.json();
         
         const select = document.getElementById('area_id');
@@ -634,8 +734,28 @@ async function loadAreasForEditForm(currentAreaId) {
             }
             select.appendChild(option);
         });
+        
+        // Check if data is from offline cache
+        const isOfflineData = response.headers.get('x-from-cache') === 'true' || 
+                             areas.offline === true;
+                             
+        if (isOfflineData && offlineManager && !offlineManager.isOnline) {
+            // Add offline indicator to select
+            select.classList.add('cached-item');
+            
+            // Add note about offline data
+            const note = document.createElement('div');
+            note.className = 'text-sm text-orange-600 mt-1';
+            note.innerHTML = '<i class="fas fa-info-circle mr-1"></i> Dati caricati dalla cache offline';
+            select.parentNode.appendChild(note);
+        }
     } catch (error) {
         console.error('Errore caricamento aree:', error);
+        
+        // Show error message
+        if (typeof showToast === 'function') {
+            showToast('Impossibile caricare le aree. Verifica la connessione.', 'error');
+        }
     }
 }
 
@@ -654,10 +774,10 @@ async function handleHedgehogEdit(e) {
     };
 
     try {
-        const response = await fetch(`/api/hedgehogs/${hedgehogId}`, {
+        // Use fetchWithOfflineSupport to handle offline mode
+        const response = await fetchWithOfflineSupport(`/api/hedgehogs/${hedgehogId}`, {
             method: 'PUT',
             headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(data)
@@ -665,14 +785,29 @@ async function handleHedgehogEdit(e) {
 
         if (response.ok) {
             document.getElementById('main-modal').classList.add('hidden');
-            showToast('Riccio aggiornato con successo', 'success');
+            
+            // Check if this was an offline submission
+            const responseData = await response.json();
+            if (responseData.offline) {
+                showToast('Modifiche salvate localmente. Verranno sincronizzate quando sarai online.', 'info');
+            } else {
+                showToast('Riccio aggiornato con successo', 'success');
+            }
+            
+            // Refresh hedgehogs list
             loadHedgehogs();
         } else {
             const error = await response.json();
             showToast('Errore: ' + (error.error || 'Errore sconosciuto'), 'error');
         }
     } catch (error) {
-        showToast('Errore di connessione', 'error');
+        console.error('Errore aggiornamento riccio:', error);
+        // Use the error message from the Error object if available
+        if (error.message && error.message !== 'Failed to fetch') {
+            showToast(error.message, 'error');
+        } else {
+            showToast('Errore di connessione. Verifica la tua connessione internet.', 'error');
+        }
     }
 }
 
@@ -772,10 +907,10 @@ async function handleWeightSubmit(e) {
     };
 
     try {
-        const response = await fetch('/api/weight-records', {
+        // Use fetchWithOfflineSupport to handle offline mode
+        const response = await fetchWithOfflineSupport('/api/weight-records', {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(data)
@@ -783,7 +918,15 @@ async function handleWeightSubmit(e) {
 
         if (response.ok) {
             document.getElementById('main-modal').classList.add('hidden');
-            showToast('Pesata registrata con successo', 'success');
+            
+            // Check if this was an offline submission
+            const responseData = await response.json();
+            if (responseData.offline) {
+                showToast('Pesata salvata localmente. Verrà sincronizzata quando sarai online.', 'info');
+            } else {
+                showToast('Pesata registrata con successo', 'success');
+            }
+            
             // Refresh hedgehog list to show updated data
             loadHedgehogs();
         } else {
@@ -791,7 +934,13 @@ async function handleWeightSubmit(e) {
             showToast('Errore: ' + (error.error || 'Errore sconosciuto'), 'error');
         }
     } catch (error) {
-        showToast('Errore di connessione', 'error');
+        console.error('Errore invio pesata:', error);
+        // Use the error message from the Error object if available
+        if (error.message && error.message !== 'Failed to fetch') {
+            showToast(error.message, 'error');
+        } else {
+            showToast('Errore di connessione. Verifica la tua connessione internet.', 'error');
+        }
     }
 }
 
@@ -815,10 +964,10 @@ async function handleTherapySubmit(e) {
     };
 
     try {
-        const response = await fetch('/api/therapies', {
+        // Use fetchWithOfflineSupport to handle offline mode
+        const response = await fetchWithOfflineSupport('/api/therapies', {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(data)
@@ -826,7 +975,15 @@ async function handleTherapySubmit(e) {
 
         if (response.ok) {
             document.getElementById('main-modal').classList.add('hidden');
-            showToast('Terapia aggiunta con successo', 'success');
+            
+            // Check if this was an offline submission
+            const responseData = await response.json();
+            if (responseData.offline) {
+                showToast('Terapia salvata localmente. Verrà sincronizzata quando sarai online.', 'info');
+            } else {
+                showToast('Terapia aggiunta con successo', 'success');
+            }
+            
             // Refresh hedgehog list to show updated data
             loadHedgehogs();
         } else {
@@ -834,19 +991,33 @@ async function handleTherapySubmit(e) {
             showToast('Errore: ' + (error.error || 'Errore sconosciuto'), 'error');
         }
     } catch (error) {
-        showToast('Errore di connessione', 'error');
+        console.error('Errore invio terapia:', error);
+        // Use the error message from the Error object if available
+        if (error.message && error.message !== 'Failed to fetch') {
+            showToast(error.message, 'error');
+        } else {
+            showToast('Errore di connessione. Verifica la tua connessione internet.', 'error');
+        }
     }
 }
 
 async function showHedgehogDetails(id) {
     try {
-        const response = await fetch(`/api/hedgehogs/${id}`, {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-        });
+        // Use fetchWithOfflineSupport to handle offline mode
+        const response = await fetchWithOfflineSupport(`/api/hedgehogs/${id}`);
         const hedgehog = await response.json();
+        
+        // Check if data is from offline cache
+        const isOfflineData = response.headers.get('x-from-cache') === 'true' || 
+                             hedgehog.offline === true;
+                             
+        // Show offline notification if data is from cache
+        if (isOfflineData && offlineManager && !offlineManager.isOnline) {
+            showToast('Visualizzazione dati in modalità offline', 'info');
+        }
 
         const modalHTML = `
-            <div class="space-y-6">
+            <div class="space-y-6 ${isOfflineData && offlineManager && !offlineManager.isOnline ? 'cached-item' : ''}">
                 <div class="flex items-center space-x-3">
                     <div class="relative group">
                         <img src="${hedgehog.picture || 'https://res.cloudinary.com/dbzxfdul3/image/upload/v1753739516/cute-hedgehog-cartoon-porcupine-illustration_1058532-11530_kxu4lt.jpg'}"
@@ -863,9 +1034,13 @@ async function showHedgehogDetails(id) {
                     </div>
                     <div>
                         <h2 class="text-2xl font-bold text-hedgehog-brown">${hedgehog.name}</h2>
-                        <span class="px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(hedgehog.status)}">
-                            ${getStatusLabel(hedgehog.status)}
-                        </span>
+                        <div class="flex items-center">
+                            <span class="px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(hedgehog.status)}">
+                                ${getStatusLabel(hedgehog.status)}
+                            </span>
+                            ${isOfflineData && offlineManager && !offlineManager.isOnline ? 
+                                '<span class="offline-badge ml-2">Offline</span>' : ''}
+                        </div>
                     </div>
                 </div>
                 

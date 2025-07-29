@@ -150,6 +150,7 @@
     </div>
 </div>
 
+<script src="/static/js/offline.js"></script>
 <script src="/static/js/mobile.js"></script>
 <script>
 // Check authentication
@@ -160,21 +161,48 @@ if (!localStorage.getItem('token')) {
 // Load dashboard stats
 async function loadDashboardStats() {
     try {
+        // Use fetchWithOfflineSupport to handle offline mode
         const [hedgehogs, rooms] = await Promise.all([
-            fetch('/api/hedgehogs', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }),
-            fetch('/api/rooms', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } })
+            fetchWithOfflineSupport('/api/hedgehogs'),
+            fetchWithOfflineSupport('/api/rooms')
         ]);
 
         if (hedgehogs.ok && rooms.ok) {
             const hedgehogsData = await hedgehogs.json();
             const roomsData = await rooms.json();
 
+            // Check if data is from offline cache
+            const isOfflineData = hedgehogs.headers.get('x-from-cache') === 'true' || 
+                                 hedgehogsData.offline === true ||
+                                 rooms.headers.get('x-from-cache') === 'true' ||
+                                 roomsData.offline === true;
+
             document.getElementById('total-hedgehogs').textContent = hedgehogsData.length;
             document.getElementById('in-care').textContent = hedgehogsData.filter(h => h.status === 'in_care').length;
             document.getElementById('total-rooms').textContent = roomsData.length;
+            
+            // Add offline indicators if data is from cache
+            if (isOfflineData && offlineManager && !offlineManager.isOnline) {
+                // Add offline badges to stats cards
+                document.querySelectorAll('.card').forEach(card => {
+                    if (!card.classList.contains('has-offline-badge')) {
+                        card.classList.add('cached-item');
+                    }
+                });
+                
+                // Show toast notification
+                if (typeof showToast === 'function') {
+                    showToast('Visualizzazione dati in modalità offline', 'info');
+                }
+            }
         }
     } catch (error) {
         console.error('Errore caricamento statistiche:', error);
+        
+        // Show error message
+        if (typeof showToast === 'function') {
+            showToast('Impossibile caricare i dati. Verifica la connessione.', 'error');
+        }
     }
 }
 
@@ -394,9 +422,8 @@ function openQuickTherapyForm() {
 
 async function loadHedgehogsForSelect(selectId) {
     try {
-        const response = await fetch('/api/hedgehogs', {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-        });
+        // Use fetchWithOfflineSupport to handle offline mode
+        const response = await fetchWithOfflineSupport('/api/hedgehogs');
         const hedgehogs = await response.json();
         
         const select = document.getElementById(selectId);
@@ -406,8 +433,28 @@ async function loadHedgehogsForSelect(selectId) {
             option.textContent = hedgehog.name;
             select.appendChild(option);
         });
+        
+        // Check if data is from offline cache
+        const isOfflineData = response.headers.get('x-from-cache') === 'true' || 
+                             hedgehogs.offline === true;
+                             
+        if (isOfflineData && offlineManager && !offlineManager.isOnline) {
+            // Add offline indicator to select
+            select.classList.add('cached-item');
+            
+            // Add note about offline data
+            const note = document.createElement('div');
+            note.className = 'text-sm text-orange-600 mt-1';
+            note.innerHTML = '<i class="fas fa-info-circle mr-1"></i> Dati caricati dalla cache offline';
+            select.parentNode.appendChild(note);
+        }
     } catch (error) {
         console.error('Errore caricamento ricci:', error);
+        
+        // Show error message
+        if (typeof showToast === 'function') {
+            showToast('Impossibile caricare i ricci. Verifica la connessione.', 'error');
+        }
     }
 }
 
@@ -423,10 +470,10 @@ async function handleQuickWeightSubmit(e) {
     };
 
     try {
-        const response = await fetch('/api/weight-records', {
+        // Use fetchWithOfflineSupport to handle offline mode
+        const response = await fetchWithOfflineSupport('/api/weight-records', {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(data)
@@ -434,13 +481,31 @@ async function handleQuickWeightSubmit(e) {
 
         if (response.ok) {
             document.getElementById('main-modal').classList.add('hidden');
-            showToast('Pesata registrata con successo', 'success');
+            
+            // Check if this was an offline submission
+            const responseData = await response.json();
+            if (responseData.offline) {
+                showToast('Pesata salvata localmente. Verrà sincronizzata quando sarai online.', 'info');
+            } else {
+                showToast('Pesata registrata con successo', 'success');
+            }
+            
+            // Refresh stats if we're on the dashboard
+            if (typeof loadDashboardStats === 'function') {
+                loadDashboardStats();
+            }
         } else {
             const error = await response.json();
             showToast('Errore: ' + (error.error || 'Errore sconosciuto'), 'error');
         }
     } catch (error) {
-        showToast('Errore di connessione', 'error');
+        console.error('Errore invio pesata:', error);
+        // Use the error message from the Error object if available
+        if (error.message && error.message !== 'Failed to fetch') {
+            showToast(error.message, 'error');
+        } else {
+            showToast('Errore di connessione. Verifica la tua connessione internet.', 'error');
+        }
     }
 }
 
@@ -457,10 +522,10 @@ async function handleQuickTherapySubmit(e) {
     };
 
     try {
-        const response = await fetch('/api/therapies', {
+        // Use fetchWithOfflineSupport to handle offline mode
+        const response = await fetchWithOfflineSupport('/api/therapies', {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(data)
@@ -468,21 +533,38 @@ async function handleQuickTherapySubmit(e) {
 
         if (response.ok) {
             document.getElementById('main-modal').classList.add('hidden');
-            showToast('Terapia aggiunta con successo', 'success');
+            
+            // Check if this was an offline submission
+            const responseData = await response.json();
+            if (responseData.offline) {
+                showToast('Terapia salvata localmente. Verrà sincronizzata quando sarai online.', 'info');
+            } else {
+                showToast('Terapia aggiunta con successo', 'success');
+            }
+            
+            // Refresh stats if we're on the dashboard
+            if (typeof loadDashboardStats === 'function') {
+                loadDashboardStats();
+            }
         } else {
             const error = await response.json();
             showToast('Errore: ' + (error.error || 'Errore sconosciuto'), 'error');
         }
     } catch (error) {
-        showToast('Errore di connessione', 'error');
+        console.error('Errore invio terapia:', error);
+        // Use the error message from the Error object if available
+        if (error.message && error.message !== 'Failed to fetch') {
+            showToast(error.message, 'error');
+        } else {
+            showToast('Errore di connessione. Verifica la tua connessione internet.', 'error');
+        }
     }
 }
 
 async function loadAreasForHedgehogForm() {
     try {
-        const response = await fetch('/api/areas', {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-        });
+        // Use fetchWithOfflineSupport to handle offline mode
+        const response = await fetchWithOfflineSupport('/api/areas');
         const areas = await response.json();
         
         const select = document.getElementById('area_id');
@@ -492,8 +574,28 @@ async function loadAreasForHedgehogForm() {
             option.textContent = `${area.room?.name || 'Stanza'} - ${area.name}`;
             select.appendChild(option);
         });
+        
+        // Check if data is from offline cache
+        const isOfflineData = response.headers.get('x-from-cache') === 'true' || 
+                             areas.offline === true;
+                             
+        if (isOfflineData && offlineManager && !offlineManager.isOnline) {
+            // Add offline indicator to select
+            select.classList.add('cached-item');
+            
+            // Add note about offline data
+            const note = document.createElement('div');
+            note.className = 'text-sm text-orange-600 mt-1';
+            note.innerHTML = '<i class="fas fa-info-circle mr-1"></i> Dati caricati dalla cache offline';
+            select.parentNode.appendChild(note);
+        }
     } catch (error) {
         console.error('Errore caricamento aree:', error);
+        
+        // Show error message
+        if (typeof showToast === 'function') {
+            showToast('Impossibile caricare le aree. Verifica la connessione.', 'error');
+        }
     }
 }
 
@@ -510,10 +612,10 @@ async function handleQuickHedgehogSubmit(e) {
     };
 
     try {
-        const response = await fetch('/api/hedgehogs', {
+        // Use fetchWithOfflineSupport to handle offline mode
+        const response = await fetchWithOfflineSupport('/api/hedgehogs', {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(data)
@@ -521,14 +623,29 @@ async function handleQuickHedgehogSubmit(e) {
 
         if (response.ok) {
             document.getElementById('main-modal').classList.add('hidden');
-            showToast('Riccio aggiunto con successo', 'success');
-            loadDashboardStats(); // Refresh stats
+            
+            // Check if this was an offline submission
+            const responseData = await response.json();
+            if (responseData.offline) {
+                showToast('Riccio salvato localmente. Verrà sincronizzato quando sarai online.', 'info');
+            } else {
+                showToast('Riccio aggiunto con successo', 'success');
+            }
+            
+            // Refresh stats
+            loadDashboardStats();
         } else {
             const error = await response.json();
             showToast('Errore: ' + (error.error || 'Errore sconosciuto'), 'error');
         }
     } catch (error) {
-        showToast('Errore di connessione', 'error');
+        console.error('Errore invio riccio:', error);
+        // Use the error message from the Error object if available
+        if (error.message && error.message !== 'Failed to fetch') {
+            showToast(error.message, 'error');
+        } else {
+            showToast('Errore di connessione. Verifica la tua connessione internet.', 'error');
+        }
     }
 }
 

@@ -75,6 +75,10 @@
                     <i class="fas fa-download text-amber-600 mr-3"></i>
                     <span>6. Esportazione</span>
                 </a>
+                <a href="#offline" class="flex items-center p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                    <i class="fas fa-wifi-slash text-red-600 mr-3"></i>
+                    <span>7. Modalità Offline</span>
+                </a>
             </div>
         </div>
 
@@ -297,6 +301,108 @@
             </div>
         </section>
 
+        <!-- Offline Mode -->
+        <section id="offline" class="bg-white rounded-2xl shadow-lg p-6 mb-8">
+            <h2 class="text-2xl font-bold text-hedgehog-brown mb-6">📵 7. Modalità Offline</h2>
+            
+            <div class="space-y-6">
+                <div class="border-l-4 border-red-500 pl-4">
+                    <h3 class="text-lg font-semibold mb-2">Funzionalità Offline</h3>
+                    <p class="text-gray-700 mb-3">L'applicazione La Ninna può funzionare anche senza connessione internet:</p>
+                    <ul class="list-disc list-inside text-gray-700 space-y-1">
+                        <li>Visualizzazione di ricci, stanze e aree</li>
+                        <li>Aggiunta di nuovi ricci</li>
+                        <li>Registrazione di pesate</li>
+                        <li>Aggiunta di terapie</li>
+                        <li>Sincronizzazione automatica quando si torna online</li>
+                    </ul>
+                </div>
+
+                <div class="border-l-4 border-blue-500 pl-4">
+                    <h3 class="text-lg font-semibold mb-2">Come Funziona</h3>
+                    <p class="text-gray-700 mb-3">Il sistema utilizza tecnologie moderne per garantire l'accesso offline:</p>
+                    <ul class="list-disc list-inside text-gray-700 space-y-1">
+                        <li>I dati vengono memorizzati localmente nel browser</li>
+                        <li>Le modifiche vengono salvate in una coda di sincronizzazione</li>
+                        <li>Quando la connessione viene ripristinata, i dati vengono sincronizzati automaticamente</li>
+                        <li>Nessuna perdita di dati anche in caso di interruzioni prolungate</li>
+                    </ul>
+                </div>
+
+                <div class="border-l-4 border-yellow-500 pl-4">
+                    <h3 class="text-lg font-semibold mb-2">Indicatori Visivi</h3>
+                    <p class="text-gray-700 mb-3">Quando sei offline, il sistema mostra indicatori visivi:</p>
+                    <ul class="list-disc list-inside text-gray-700 space-y-1">
+                        <li><strong>Banner rosso</strong> nella parte superiore dello schermo</li>
+                        <li><strong>Badge "Offline"</strong> sulle schede dei ricci e altri elementi</li>
+                        <li><strong>Bordo arancione</strong> sui dati caricati dalla cache</li>
+                        <li><strong>Notifiche</strong> quando i dati vengono salvati localmente</li>
+                    </ul>
+                </div>
+
+                <div class="border-l-4 border-green-500 pl-4">
+                    <h3 class="text-lg font-semibold mb-2">Utilizzo Offline</h3>
+                    <ol class="list-decimal list-inside text-gray-700 space-y-2">
+                        <li>Continua a utilizzare l'app normalmente anche senza connessione</li>
+                        <li>Aggiungi ricci, pesate e terapie come faresti online</li>
+                        <li>I dati verranno salvati localmente con un indicatore "Offline"</li>
+                        <li>Quando torni online, i dati verranno sincronizzati automaticamente</li>
+                        <li>Riceverai una notifica quando la sincronizzazione è completata</li>
+                    </ol>
+                </div>
+
+                <div class="border-l-4 border-purple-500 pl-4">
+                    <h3 class="text-lg font-semibold mb-2">Sincronizzazione Dati</h3>
+                    <p class="text-gray-700 mb-3">Quando torni online:</p>
+                    <ul class="list-disc list-inside text-gray-700 space-y-1">
+                        <li>La sincronizzazione avviene automaticamente in background</li>
+                        <li>Le modifiche vengono inviate al server nell'ordine in cui sono state effettuate</li>
+                        <li>In caso di conflitti, prevale la versione più recente</li>
+                        <li>Riceverai notifiche sullo stato della sincronizzazione</li>
+                    </ul>
+                </div>
+
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div class="flex items-center mb-2">
+                        <i class="fas fa-lightbulb text-blue-600 mr-2"></i>
+                        <strong class="text-blue-800">Suggerimento</strong>
+                    </div>
+                    <p class="text-blue-700">Per garantire la massima efficienza offline, visita regolarmente le pagine principali quando sei online per aggiornare la cache locale.</p>
+                </div>
+
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <div class="flex items-center mb-2">
+                        <i class="fas fa-exclamation-triangle text-yellow-600 mr-2"></i>
+                        <strong class="text-yellow-800">Limitazioni</strong>
+                    </div>
+                    <p class="text-yellow-700">Alcune funzionalità avanzate potrebbero non essere disponibili offline:</p>
+                    <ul class="list-disc list-inside text-yellow-700 mt-2">
+                        <li>Caricamento immagini</li>
+                        <li>Esportazione di report complessi</li>
+                        <li>Alcune statistiche avanzate</li>
+                    </ul>
+                </div>
+
+                <div class="border-l-4 border-red-500 pl-4">
+                    <h3 class="text-lg font-semibold mb-2">Risoluzione Problemi</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <p class="font-medium text-gray-800">Problema: I dati non si sincronizzano quando torno online</p>
+                            <p class="text-gray-700">Soluzione: Ricarica la pagina o naviga tra le sezioni per attivare la sincronizzazione</p>
+                        </div>
+                        <div>
+                            <p class="font-medium text-gray-800">Problema: Vedo dati obsoleti</p>
+                            <p class="text-gray-700">Soluzione: Premi il pulsante di aggiornamento o ricarica la pagina quando sei online</p>
+                        </div>
+                        <div>
+                            <p class="font-medium text-gray-800">Problema: L'indicatore offline rimane anche quando sono online</p>
+                            <p class="text-gray-700">Soluzione: Ricarica completamente l'applicazione (Ctrl+F5 o Cmd+Shift+R)</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- Support -->
         <div class="bg-hedgehog-brown text-white rounded-2xl shadow-lg p-6 text-center">
             <div class="text-4xl mb-4">🆘</div>
@@ -309,6 +415,7 @@
     </div>
 </div>
 
+<script src="/static/js/offline.js"></script>
 <script src="/static/js/mobile.js"></script>
 <script>
 // Check authentication
