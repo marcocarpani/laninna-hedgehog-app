@@ -10,7 +10,7 @@ services:
       - PORT=8080
       - GIN_MODE=release
       - DB_PATH=/data/laninna.db
-      - AUTO_MIGRATE=true
+      - AUTO_MIGRATE=false
       - JWT_SECRET=${JWT_SECRET:-laninna-default-secret-change-in-production}
       - NOTIFICATION_INTERVAL_MINUTES=30
       - FONTS_PATH=./fonts

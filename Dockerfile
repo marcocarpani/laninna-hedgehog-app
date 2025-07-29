@@ -38,6 +38,9 @@ RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 WORKDIR /app
 RUN mkdir -p /data && chown -R appuser:appgroup /data
 
+# Define volume for database persistence
+VOLUME ["/data"]
+
 # Copy binary from builder stage
 COPY --from=builder /app/laninna-app .
 

@@ -148,6 +148,24 @@
     padding-bottom: 5px !important;
   }
   
+  /* Room-builder specific fixes */
+  .bg-white.rounded-2xl.shadow-lg.p-6 {
+    margin-bottom: 70px !important; /* Add margin to prevent overlap with bottom navigation */
+    max-height: calc(100vh - 200px) !important; /* Adjust max height to account for bottom nav */
+    overflow-y: auto !important; /* Enable scrolling for the toolbar */
+  }
+  
+  /* Ensure the 'Aggiorna Area' button is always visible */
+  .bg-white.rounded-2xl.shadow-lg.p-6 button {
+    margin-bottom: 10px !important;
+  }
+  
+  /* Rooms list specific fixes */
+  #rooms-list {
+    margin-bottom: 70px !important; /* Add margin to prevent overlap with bottom navigation */
+    padding-bottom: 20px !important; /* Additional padding for better spacing */
+  }
+  
   /* Adjust form layouts for very small screens */
   .grid-cols-1.md\:grid-cols-2 input,
   .grid-cols-1.md\:grid-cols-2 select,
